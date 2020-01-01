@@ -14,13 +14,13 @@
     
     
     
-    <title>Redis 分布式锁 | 大音希声，大象无形</title>
+    <title>Redis 分布式锁 | 大音希声，大象无形 | 这深夜里一片寂静，是因为你还没有听见声音</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     
     <meta name="theme-color" content="#3F51B5">
     
     
-    <meta name="keywords" content="Redis">
+    <meta name="keywords" content="Distributed Lock">
     <meta name="description" content="在单节点情况下，实现线程安全需要靠同步状态来控制。而在分布式应用中，使程序正确执行不被并发问题影响，就需要分布式锁来控制。 在单节点中，需要用一个并发线程都能访问到的资源的状态变化来控制同步。在分布式应用中，使用应用所有节点都能访问到的 Redis 中的某个 key 来控制并发问题。 单节点 Redis 分布式锁setnxsetnx 指令会在 key 不存在的情况下放入 redis，如果存在则不会">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis 分布式锁">
@@ -29,9 +29,9 @@
 <meta property="og:description" content="在单节点情况下，实现线程安全需要靠同步状态来控制。而在分布式应用中，使程序正确执行不被并发问题影响，就需要分布式锁来控制。 在单节点中，需要用一个并发线程都能访问到的资源的状态变化来控制同步。在分布式应用中，使用应用所有节点都能访问到的 Redis 中的某个 key 来控制并发问题。 单节点 Redis 分布式锁setnxsetnx 指令会在 key 不存在的情况下放入 redis，如果存在则不会">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2019-11-17T16:52:50.000Z">
-<meta property="article:modified_time" content="2020-01-01T16:53:51.178Z">
+<meta property="article:modified_time" content="2020-01-01T17:13:41.435Z">
 <meta property="article:author" content="ChangleAmazing">
-<meta property="article:tag" content="Redis">
+<meta property="article:tag" content="Distributed Lock">
 <meta name="twitter:card" content="summary">
     
         <link rel="alternate" type="application/atom+xml" title="大音希声，大象无形" href="/atom.xml">
@@ -263,7 +263,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2020-01-01T16:53:51.178Z" itemprop="dateUpdated">2020-01-02 00:53:51</time>
+    最后更新时间：<time datetime="2020-01-01T17:13:41.435Z" itemprop="dateUpdated">2020-01-02 01:13:41</time>
 </span><br>
 
 
@@ -283,7 +283,7 @@
 
         <div class="post-footer">
             
-	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li></ul>
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Distributed-Lock/" rel="tag">Distributed Lock</a></li></ul>
 
 
             
