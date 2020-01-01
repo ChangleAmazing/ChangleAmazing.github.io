@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Redis 分布式锁 | 大音希声，大象无形</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Redis">
+    <meta name="description" content="在单节点情况下，实现线程安全需要靠同步状态来控制。而在分布式应用中，使程序正确执行不被并发问题影响，就需要分布式锁来控制。 在单节点中，需要用一个并发线程都能访问到的资源的状态变化来控制同步。在分布式应用中，使用应用所有节点都能访问到的 Redis 中的某个 key 来控制并发问题。 单节点 Redis 分布式锁setnxsetnx 指令会在 key 不存在的情况下放入 redis，如果存在则不会">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 分布式锁">
+<meta property="og:url" content="http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/index.html">
+<meta property="og:site_name" content="大音希声，大象无形">
+<meta property="og:description" content="在单节点情况下，实现线程安全需要靠同步状态来控制。而在分布式应用中，使程序正确执行不被并发问题影响，就需要分布式锁来控制。 在单节点中，需要用一个并发线程都能访问到的资源的状态变化来控制同步。在分布式应用中，使用应用所有节点都能访问到的 Redis 中的某个 key 来控制并发问题。 单节点 Redis 分布式锁setnxsetnx 指令会在 key 不存在的情况下放入 redis，如果存在则不会">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-11-17T16:52:50.000Z">
+<meta property="article:modified_time" content="2020-01-01T16:53:51.178Z">
+<meta property="article:author" content="ChangleAmazing">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+    
+        <link rel="alternate" type="application/atom+xml" title="大音希声，大象无形" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/logo.jpeg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">ChangleAmazing</h5>
+          <a href="mailto:changle0331@gmail.com" title="changle0331@gmail.com" class="mail">changle0331@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                Home
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/yscoder" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Redis 分布式锁</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Redis 分布式锁</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2019-11-17T16:52:50.000Z" itemprop="datePublished" class="page-time">
+  2019-11-18
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Redis/">Redis</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#单节点-Redis-分布式锁"><span class="post-toc-number">1.</span> <span class="post-toc-text">单节点 Redis 分布式锁</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#setnx"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">setnx</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#setnx-then-expire"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">setnx then expire</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#set-and-expire"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">set and expire</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#解决锁被其他线程释放问题"><span class="post-toc-number">1.4.</span> <span class="post-toc-text">解决锁被其他线程释放问题</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#临界区并发问题"><span class="post-toc-number">1.5.</span> <span class="post-toc-text">临界区并发问题</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#多节点-Redis-分布式锁"><span class="post-toc-number">2.</span> <span class="post-toc-text">多节点 Redis 分布式锁</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Redlock-算法"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">Redlock 算法</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#一些插曲"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">一些插曲</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#相关链接"><span class="post-toc-number">3.</span> <span class="post-toc-text">相关链接</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-分布式锁"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Redis 分布式锁</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2019-11-18 00:52:50" datetime="2019-11-17T16:52:50.000Z"  itemprop="datePublished">2019-11-18</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Redis/">Redis</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>在单节点情况下，实现线程安全需要靠同步状态来控制。而在分布式应用中，使程序正确执行不被并发问题影响，就需要分布式锁来控制。</p>
+<p>在单节点中，需要用一个并发线程都能访问到的资源的状态变化来控制同步。在分布式应用中，使用应用所有节点都能访问到的 <code>Redis</code> 中的某个 <code>key</code> 来控制并发问题。</p>
+<h2 id="单节点-Redis-分布式锁"><a href="#单节点-Redis-分布式锁" class="headerlink" title="单节点 Redis 分布式锁"></a>单节点 Redis 分布式锁</h2><h3 id="setnx"><a href="#setnx" class="headerlink" title="setnx"></a><code>setnx</code></h3><p><code>setnx</code> 指令会在 <code>key</code> 不存在的情况下放入 <code>redis</code>，如果存在则不会设置。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt;setnx lock:distributed true</span><br><span class="line">OK</span><br><span class="line">...</span><br><span class="line">other code</span><br><span class="line">...</span><br><span class="line">&gt;del lock:distributed</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这种方式的问题在于，执行到 other code 时，程序出现异常，导致 <code>del</code> 指令不会被执行，<code>key</code> 没有被释放，这样会陷入死锁。</p>
+<h3 id="setnx-then-expire"><a href="#setnx-then-expire" class="headerlink" title="setnx then expire"></a><code>setnx then expire</code></h3><p>为了解决死锁，乍一看可以使用 <code>expire</code> 来给 <code>key</code> 设置超时时间。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&gt;setnx lock:distributed true</span><br><span class="line">OK</span><br><span class="line">&gt;expire lock:distributed 5</span><br><span class="line">...</span><br><span class="line">other code</span><br><span class="line">...</span><br><span class="line">&gt;del lock:distributed</span><br></pre></td></tr></table></figure>
+
+<p>这种处理其实仍然有问题，因为 <code>setnx</code> 与 <code>expire</code> 不是原子操作， 执行 <code>expire</code> 语句之前可能发生异常。死锁仍然会出现。</p>
+<h3 id="set-and-expire"><a href="#set-and-expire" class="headerlink" title="set and expire"></a><code>set and expire</code></h3><p>为了解决非原子性操作被中断的问题，在 <code>Redis 2.8</code> 中加入了 <code>setnx</code> 与 <code>expire</code> 组合在一起的原子指令。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt;set lock:distributed true ex 5 nx</span><br><span class="line">OK</span><br><span class="line">...</span><br><span class="line">other code</span><br><span class="line">...</span><br><span class="line">&gt;del lock:distributed</span><br></pre></td></tr></table></figure>
+
+<p>这种方式保证了加锁并设置有效时间操作的原子性，但是依然有问题。</p>
+<p>假设我们在加锁与释放锁之间的业务代码执行时间超过了设置的有效时间，此时锁会因为超时被释放。会导致两种情况：</p>
+<ol>
+<li>其他节点 B 获取锁之后，执行超时节点 A 执行完成，释放了 B 的锁。</li>
+<li>其它节点获取到了锁，执行临界区代码时就可能会出现并发问题。</li>
+</ol>
+<h3 id="解决锁被其他线程释放问题"><a href="#解决锁被其他线程释放问题" class="headerlink" title="解决锁被其他线程释放问题"></a>解决锁被其他线程释放问题</h3><p>因为在加锁时，各个节点使用的同一个 <code>key</code>，所以会存在超时节点释放了当前加锁节点的锁的情况。这种情况下，可以给加锁的 <code>key</code> 设置一个随机值，删除的时候需要判断 <code>key</code> 当前的 <code>value</code> 是不是等于随机值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">val &#x3D; Random.nextInt();</span><br><span class="line">if( redis.set(key,val,true,5) )&#123;</span><br><span class="line">	...</span><br><span class="line">	other code</span><br><span class="line">	...</span><br><span class="line">	value &#x3D; redis.get(key);</span><br><span class="line">	if(val &#x3D;&#x3D; value)&#123;</span><br><span class="line">		redis.delete(key);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述代码实现了根据随机值删除的逻辑，但是获取 <code>value</code> 直到 <code>delete</code> 指令并非是原子指令，仍然可能有并发问题。这时候需要使用 <code>lua</code> 脚本处理，因为 <code>lua</code> 脚本可以保证连续多个指令原子执行。</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> redis.call(<span class="string">"get"</span>,KEYS[<span class="number">1</span>]) == ARGV[<span class="number">1</span>] <span class="keyword">then</span></span><br><span class="line">    <span class="keyword">return</span> redis.call(<span class="string">"del"</span>,KEYS[<span class="number">1</span>])</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>这种方式可以避免锁被其他线程释放的问题。</p>
+<h3 id="临界区并发问题"><a href="#临界区并发问题" class="headerlink" title="临界区并发问题"></a>临界区并发问题</h3><p><strong>临界区代码出现并发问题的本质是业务代码执行时间大于锁过期时间。</strong></p>
+<p>我们可以定时刷新加锁时间，保证业务代码在锁过期时间内执行完成。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">boolean</span> isFlushExpiration = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span>(redis.set(lock, val, NOT_EXIST, SECONDS, <span class="number">20</span>))&#123;</span><br><span class="line">    Thread thread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> FlushExpirationTherad());</span><br><span class="line">	thread.setDeamon(<span class="keyword">true</span>);</span><br><span class="line">  	thread.start();</span><br><span class="line">    ...</span><br><span class="line">    other code</span><br><span class="line">    ... </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">isFlushExpiration = <span class="keyword">false</span>;</span><br><span class="line">String deleteScript = <span class="string">"if redis.call("</span>get<span class="string">",KEYS[1]) == ARGV[1] then"</span> </span><br><span class="line">    + <span class="string">"return redis.call("</span>del<span class="string">",KEYS[1])"</span></span><br><span class="line">    + <span class="string">"else return 0 end"</span>;</span><br><span class="line">redis.eval(deleteScript,<span class="number">1</span>,key,val);</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">FlushExpirationTherad</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(isFlushExpiration)&#123;</span><br><span class="line">            String checkAndExpireScript = <span class="string">"if redis.call('get', KEYS[1]) == ARGV[1] then "</span> +</span><br><span class="line">                        <span class="string">"return redis.call('expire',KEYS[1],ARGV[2]) "</span> +</span><br><span class="line">                        <span class="string">"else return 0 end"</span>;</span><br><span class="line">            redis.eval(checkAndExpireScript,<span class="number">1</span>,key,val,<span class="string">"20"</span>);</span><br><span class="line">            <span class="comment">// 每隔十秒检查是否完成</span></span><br><span class="line">            Thread.sleep(<span class="number">10</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种实现是用一个线程定期监控客户端是否执行完成。也可以由服务端实现心跳检测机制来保证业务完成（<code>Zookeeper</code>)。</p>
+<p>所以实现单节点 Redis 分布式锁要关注三个关键问题：</p>
+<ol>
+<li>获取锁与设置超时时间实现为原子操作（Redis2.8 开始已支持）</li>
+<li>设置随机字符串保证释放锁时能保证只释放自己持有的锁（给对应的 key 设置随机值）</li>
+<li>判断与释放锁必须实现为原子操作（lua 脚本实现）</li>
+</ol>
+<h2 id="多节点-Redis-分布式锁"><a href="#多节点-Redis-分布式锁" class="headerlink" title="多节点 Redis 分布式锁"></a>多节点 Redis 分布式锁</h2><p>为了保证项目的高可用性，项目一般都配置了 <code>Redis</code> 集群，以防在单节点 <code>Redis</code> 宕机之后，所有客户端都无法获得锁。</p>
+<p>在集群环境下，<code>Redis</code> 存在 <code>failover</code> 机制。当 <code>Master</code> 节点宕机之后，会开始异步的主从复制（<code>replication</code>），这个过程可能会出现以下情况：</p>
+<ol>
+<li>客户端 A 获取了 <code>Master</code> 节点的锁。</li>
+<li><code>Master</code> 节点宕机了，存储锁的 <code>key</code> 暂未同步到 <code>Slave</code> 上。</li>
+<li><code>Slave</code> 节点升级为 <code>Master</code> 节点。</li>
+<li>客户端 B 从新的 <code>Master</code> 节点上获取到了同一资源的锁。</li>
+</ol>
+<p>在这种情况下，锁的安全性就会被打破，<code>Redis</code> 作者 <code>antirez</code> 针对此问题设计了 <code>Redlock</code> 算法。</p>
+<h3 id="Redlock-算法"><a href="#Redlock-算法" class="headerlink" title="Redlock 算法"></a>Redlock 算法</h3><p><code>Redlock</code> 算法获取锁时客户端执行步骤：</p>
+<ol>
+<li>获取当前时间（start）。</li>
+<li>依次向 N 个 <code>Redis</code> 节点请求锁。请求锁的方式与从单节点 <code>Redis</code> 获取锁的方式一致。为了保证在某个 <code>Redis</code> 节点不可用时该算法能够继续运行，获取锁的操作都需要设置超时时间，需要保证该超时时间远小于锁的有效时间。这样才能保证客户端在向某个 <code>Redis</code> 节点获取锁失败之后，可以立刻尝试下一个节点。</li>
+<li>计算获取锁的过程总共消耗多长时间（consumeTime = end - start）。如果客户端从大多数 <code>Redis</code> 节点（&gt;= N/2 + 1) 成功获取锁，并且获取锁总时长没有超过锁的有效时间，这种情况下，客户端会认为获取锁成功，否则，获取锁失败。</li>
+<li>如果最终获取锁成功，锁的有效时间应该重新设置为锁最初的有效时间减去 <code>consumeTime</code>。</li>
+<li>如果最终获取锁失败，客户端应该立刻向所有 <code>Redis</code> 节点发起释放锁的请求。</li>
+</ol>
+<p>在释放锁时，需要向<strong>所有 <code>Redis</code> 节点</strong>发起释放锁的操作，不管节点是否获取锁成功。因为可能存在客户端向 <code>Redis</code> 节点获取锁时成功，但节点通知客户端时通信失败，客户端会认为该节点加锁失败。</p>
+<p><code>Redlock</code> 算法实现了更高的可用性，也不会出现 <code>failover</code> 时失效的问题。但是如果有节点崩溃重启，仍然对锁的安全性有影响。假设共有 5 个 <code>Redis</code> 节点 A、B、C、D、E：</p>
+<ol>
+<li>客户端 A 获取了 A、B、C 节点的锁，但 D 与 E 节点的锁获取失败。</li>
+<li>节点 C 崩溃重启，但是客户端 A 在 C 上加的锁没有持久化下来，重启后丢失</li>
+<li>节点 C 重启后，客户端 B 锁住了 C、D、E，获取锁成功。</li>
+</ol>
+<p>在这种情况下，客户端 A 与 B 都获取了访问同一资源的锁。</p>
+<blockquote>
+<p>这里第 2 步中节点 C 锁丢失的问题可能由多种原因引起。默认情况下，<code>Redis</code> 的 <code>AOF</code> 持久化方式是每秒写一次磁盘（fsync），这情况下就有可能丢失 1 秒的数据。我们也可以设置每次操作都触发 <code>fsync</code>，这会影响性能，不过即使这样设置，也有可能由于操作系统的问题导致操作写入失败。</p>
+</blockquote>
+<p>为了解决节点重启导致的锁失效问题，<code>antirez</code> 提出了延迟重启的概念，即当一个节点崩溃之后并不立即重启，而是等待与分布式锁相关的 <code>key</code> 的有效时间都过期之后再重启，这样在该节点重启后也不会对现有的锁造成影响。</p>
+<h3 id="一些插曲"><a href="#一些插曲" class="headerlink" title="一些插曲"></a>一些插曲</h3><p>关于 <code>Redlock</code> 的安全性问题，在分布式系统专家 Martin Kleppmann 和 <code>Redis</code> 的作者 antirez 之间发生过一场争论，这个问题引发了激烈的讨论。关于这场争论的内容可以关注 <a href="http://zhangtielei.com/posts/blog-redlock-reasoning.html" target="_blank" rel="noopener">基于Redis的分布式锁到底安全吗</a> 这篇文章。<br>最后得出的结论是 <code>Redlock</code> 在效率要求的应用中是合理的，所以在 <code>Java</code> 项目中可以使用 <code>Redlock</code> 的 <code>Java</code> 版本 <code>Redission</code> 来控制多节点访问共享资源。但是仍有极端情况会造成 <code>Redlock</code> 的不安全，我们应该知道它在安全性上有哪些不足以及会造成什么后果。如果需要进一步的追求正确性，可以使用 <code>Zookeeper</code> 分布式锁。</p>
+<h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ul>
+<li><a href="http://zhangtielei.com/posts/blog-redlock-reasoning-part2.html" target="_blank" rel="noopener">基于Redis的分布式锁到底安全吗</a></li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-01-01T16:53:51.178Z" itemprop="dateUpdated">2020-01-02 00:53:51</time>
+</span><br>
+
+
+        
+    </div>
+    
+    <footer>
+        <a href="http://changleamazing.com">
+            <img src="/img/logo.jpeg" alt="ChangleAmazing">
+            ChangleAmazing
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/&title=《Redis 分布式锁》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/&title=《Redis 分布式锁》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Redis 分布式锁》 — 大音希声，大象无形&url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'false' == 'true',
+            appId: "g8wr7EAnVsuMj5b8roDTXWXp-gzGzoHsz",
+            appKey: "loeTK7v1qdrE1f3ED1tn1hy0",
+            avatar: "mm",
+            placeholder: "Leave Something",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>博客内容遵循 <a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>ChangleAmazing &copy; 2020</span>
+            <span>
+                
+                <a href="http://www.beian.miit.gov.cn/" target="_blank">湘ICP备18002350号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/&title=《Redis 分布式锁》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/&title=《Redis 分布式锁》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Redis 分布式锁》 — 大音希声，大象无形&url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://changleamazing.com/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '？？？';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '！！！';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

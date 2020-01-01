@@ -34,7 +34,7 @@
         <link rel="alternate" type="application/atom+xml" title="大音希声，大象无形" href="/atom.xml">
     
     <link rel="shortcut icon" href="/img/favicon.ico">
-    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
     <script>window.lazyScripts=[]</script>
 
     <!-- custom head -->
@@ -150,13 +150,15 @@
     <ul class="post-list">
     
         <li class="post-list-item fade">
-            <article id="post-hello-world"
+            <article id="post-分布式锁"
   class="article-card article-type-post" itemprop="blogPost">
 
     <div class="post-meta">
-        <time class="post-time" title="2020-01-01 22:27:32" datetime="2020-01-01T14:27:32.641Z"  itemprop="datePublished">2020-01-01</time>
+        <time class="post-time" title="2019-11-18 00:52:50" datetime="2019-11-17T16:52:50.000Z"  itemprop="datePublished">2019-11-18</time>
 
         
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Redis/">Redis</a></li></ul>
+
 
 
     </div>
@@ -166,7 +168,7 @@
 
   
     <h3 class="post-title" itemprop="name">
-      <a class="post-title-link" href="/2020/01/01/hello-world/">Hello World</a>
+      <a class="post-title-link" href="/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis 分布式锁</a>
     </h3>
   
 
@@ -176,12 +178,20 @@
     <div class="post-content" id="post-content" itemprop="postContent">
 
     
-        Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer ...
+        在单节点情况下，实现线程安全需要靠同步状态来控制。而在分布式应用中，使程序正确执行不被并发问题影响，就需要分布式锁来控制。
+在单节点中，需要用一个并发线程都能访问到的资源的状态变化来控制同步。在分布式应用中，使用应用所有节点都能访问到的 Redis 中的某个 key 来控制并发问题。
+单节点 ...
     
 
-        <a href="/2020/01/01/hello-world/" class="post-more waves-effect waves-button">
+        <a href="/2019/11/18/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="post-more waves-effect waves-button">
             阅读全文…
         </a>
+    </div>
+    
+    <div class="post-footer">
+        
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li></ul>
+
     </div>
     
 </article>
@@ -275,7 +285,7 @@ var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
 
 </script>
 
-<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+<script src="/js/main.min.js?v=1.7.2"></script>
 
 
 <div class="search-panel" id="search-panel">
@@ -295,7 +305,7 @@ var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
 </li>
 </template>
 
-<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+<script src="/js/search.min.js?v=1.7.2" async></script>
 
 
 
