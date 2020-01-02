@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Redis 数据持久化 | 大音希声，大象无形 | 这深夜里一片寂静，是因为你还没有听见声音</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Redis 持久化">
+    <meta name="description" content="Redis 是一种内存型数据库，一旦服务器进程退出，数据库的数据就会丢失。为了解决这个问题，Redis 提供了 RDB 持久化、AOF 持久化、RDB-AOF 混合持久化等多种持久化方式，将内存中的数据保存到磁盘中，避免数据的丢失。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 数据持久化">
+<meta property="og:url" content="http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/index.html">
+<meta property="og:site_name" content="大音希声，大象无形">
+<meta property="og:description" content="Redis 是一种内存型数据库，一旦服务器进程退出，数据库的数据就会丢失。为了解决这个问题，Redis 提供了 RDB 持久化、AOF 持久化、RDB-AOF 混合持久化等多种持久化方式，将内存中的数据保存到磁盘中，避免数据的丢失。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-01-01T18:02:32.000Z">
+<meta property="article:modified_time" content="2020-01-02T20:56:33.091Z">
+<meta property="article:author" content="ChangleAmazing">
+<meta property="article:tag" content="Redis 持久化">
+<meta name="twitter:card" content="summary">
+    
+        <link rel="alternate" type="application/atom+xml" title="大音希声，大象无形" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/logo.jpeg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">ChangleAmazing</h5>
+          <a href="mailto:changle0331@gmail.com" title="changle0331@gmail.com" class="mail">changle0331@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                Home
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/yscoder" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Redis 数据持久化</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Redis 数据持久化</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-01-01T18:02:32.000Z" itemprop="datePublished" class="page-time">
+  2020-01-02
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Redis/">Redis</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#RDB-持久化"><span class="post-toc-number">1.</span> <span class="post-toc-text">RDB 持久化</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#RDB-文件创建"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">RDB 文件创建</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#SAVE"><span class="post-toc-number">1.1.1.</span> <span class="post-toc-text">SAVE</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#BGSAVE"><span class="post-toc-number">1.1.2.</span> <span class="post-toc-text">BGSAVE</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#配置自动创建-RDB-文件"><span class="post-toc-number">1.1.3.</span> <span class="post-toc-text">配置自动创建 RDB 文件</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#SAVE-与-BGSAVE-的选择"><span class="post-toc-number">1.1.4.</span> <span class="post-toc-text">SAVE 与 BGSAVE 的选择</span></a></li></ol></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#RDB-优缺点"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">RDB 优缺点</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#AOF-持久化"><span class="post-toc-number">2.</span> <span class="post-toc-text">AOF 持久化</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#AOF-文件冲洗频率"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">AOF 文件冲洗频率</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#AOF-重写"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">AOF 重写</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#BGREWRITEAOF"><span class="post-toc-number">2.2.1.</span> <span class="post-toc-text">BGREWRITEAOF</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#AOF-重写配置选项"><span class="post-toc-number">2.2.2.</span> <span class="post-toc-text">AOF 重写配置选项</span></a></li></ol></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#AOF-持久化优缺点"><span class="post-toc-number">2.3.</span> <span class="post-toc-text">AOF 持久化优缺点</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-Redis 数据持久化"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Redis 数据持久化</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-01-02 02:02:32" datetime="2020-01-01T18:02:32.000Z"  itemprop="datePublished">2020-01-02</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Redis/">Redis</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p><code>Redis</code> 是一种内存型数据库，一旦服务器进程退出，数据库的数据就会丢失。为了解决这个问题，<code>Redis</code> 提供了 <code>RDB</code> 持久化、<code>AOF</code> 持久化、<code>RDB-AOF</code> 混合持久化等多种持久化方式，将内存中的数据保存到磁盘中，避免数据的丢失。</p>
+<a id="more"></a>
+
+<h2 id="RDB-持久化"><a href="#RDB-持久化" class="headerlink" title="RDB 持久化"></a>RDB 持久化</h2><p><strong><code>RDB</code> 持久化是 <code>Redis</code> 默认的持久化方式</strong>。</p>
+<p><code>RDB</code> 持久化会创建一个经过压缩的以 <code>.rdb</code> 结尾的二进制文件，其中<strong>包含了服务器在各个数据库中存储的键值对数据等信息</strong>。</p>
+<h3 id="RDB-文件创建"><a href="#RDB-文件创建" class="headerlink" title="RDB 文件创建"></a>RDB 文件创建</h3><p>创建 <code>RDB</code>文件有多种方式。用户可以使用 <code>SAVE</code> 或者 <code>BGSAVE</code> 命令手动创建 <code>RDB</code> 文件，也可以通过配置 <code>save</code> 配置项使服务器在满足指定条件时自动执行 <code>BGSAVE</code> 命令。</p>
+<h4 id="SAVE"><a href="#SAVE" class="headerlink" title="SAVE"></a>SAVE</h4><p>用户可以通过 <code>SAVE</code> 命令让 <code>Redis</code> 服务器以<strong>同步方式</strong>创建 <code>RDB</code> 文件。</p>
+<p><code>SAVE</code> 是无参数命令，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SAVE</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>SAVE</code> 命令执行期间， <code>Redis</code> 服务器将阻塞，直到 <code>RDB</code> 文件创建完毕。</p>
+<p>当执行 <code>SAVE</code> 命令时，如果本地已经存在相应的 <code>RDB</code> 文件，则会在新的 <code>RDB</code> 文件创建完成之后删除原有的 <code>RDB</code> 文件。</p>
+<p><code>SAVE</code> 命令的复杂度为 <code>O(N)</code>， <code>N</code> 表示 <code>Redis</code> 服务器所有数据库包含的键值对的总数。</p>
+<h4 id="BGSAVE"><a href="#BGSAVE" class="headerlink" title="BGSAVE"></a>BGSAVE</h4><p>因为 <code>SAVE</code> 命令是同步操作，会阻塞服务器，导致执行此命令期间 <code>Redis</code> 无法执行其它命令。所以 <code>Redis</code> 提供了 <code>SAVE</code> 命令的异步版本 — <code>BGSAVE</code>。<code>BGSAVE</code> 会使用子进程创建 <code>RDB</code> 文件。</p>
+<p><code>BGSAVE</code> 也是无参数命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; BGSAVE</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+
+
+
+<p>虽然 <code>BGSAVE</code> 的异步操作不会使服务器在创建  <code>RDB</code> 文件过程中阻塞，但是创建子进程的过程会造成短时间的阻塞。</p>
+<p>父进程调用操作系统 <code>fork</code> 函数创建一个子进程，而 <code>fork</code> 函数在父进程占用内存越大时，创建子进程耗时越长。</p>
+<p><code>BGSAVE</code> 命令的复杂度为 <code>O(N)</code>， <code>N</code> 表示 <code>Redis</code> 服务器所有数据库包含的键值对的总数。</p>
+<h4 id="配置自动创建-RDB-文件"><a href="#配置自动创建-RDB-文件" class="headerlink" title="配置自动创建 RDB 文件"></a>配置自动创建 RDB 文件</h4><p>除了通过 <code>SAVE</code> 与 <code>BGSAVE</code> 命令手动创建 <code>RDB</code> 文件外，还可以通过在配置文件中配置 <code>save</code> 选项，让服务器在满足指定条件时自动执行 <code>BGSAVE</code> 命令。</p>
+<p><code>save</code> 配置项选项如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">save  &lt;seconds&gt;  &lt;changes&gt;</span><br></pre></td></tr></table></figure>
+
+<p><code>seconds</code>  参数指定触发持久化操作的周期，<code>changes</code>  参数用来指定触发持久化操作所需要的修改次数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">save  60  10000</span><br></pre></td></tr></table></figure>
+
+<p>这个配置表示服务器在 60s 内至少执行了 10000 次修改时，服务器会自动执行 <code>BGSAVE</code> 命令。</p>
+<p><code>Redis</code> 默认持久化方式为 <code>RDB</code>，如果不改变默认配置，那么 <code>Redis</code> 使用的 <code>save</code> 选项为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">save  60  10000</span><br><span class="line">save  300  100</span><br><span class="line">save  3600  1</span><br></pre></td></tr></table></figure>
+
+<p>这里配置了多个 <code>save</code> 选项，当其中任意一个条件被满足时就会触发服务器执行 <code>BGSAVE</code> 命令。</p>
+<blockquote>
+<p>为了避免由于同时使用多个 <code>RDB</code> 文件创建方式或者配置多个 <code>save</code> 选项导致服务器频繁创建 <code>RDB</code> 文件，<code>Redis</code> 服务器在每次成功创建 <code>RDB</code> 文件后，会将负责自动触发 <code>BGSAVE</code> 命令的时间计数器以及修改次数计数器清零并重新开始计数。</p>
+</blockquote>
+<h4 id="SAVE-与-BGSAVE-的选择"><a href="#SAVE-与-BGSAVE-的选择" class="headerlink" title="SAVE 与 BGSAVE 的选择"></a>SAVE 与 BGSAVE 的选择</h4><p>由于 <code>SAVE</code> 命令会阻塞 <code>Redis</code> 服务器向其它客户端服务，所以如果我们需要创建 <code>RDB</code> 文件时同时为其它客户端服务，就只能使用 <code>BGSAVE</code> 命令创建 <code>RDB</code> 文件。</p>
+<p>而 <code>SAVE</code> 命令更适合维护离线 <code>Redis</code> 服务器，因为它不会创建子进程而消耗额外的内存。</p>
+<h3 id="RDB-优缺点"><a href="#RDB-优缺点" class="headerlink" title="RDB 优缺点"></a>RDB 优缺点</h3><p><code>RDB</code> 持久化可以生成紧凑的 <code>RDB</code> 文件，并且使用 <code>RDB</code>  文件恢复数据也很快.</p>
+<p>但是无论是 <code>SAVE</code> 命令还是 <code>BGSAVE</code> 命令，当服务器停机时，服务器丢失的数据量取决于创建 <code>RDB</code> 文件的时间间隔：间隔越长，丢失数据越多。如果提高执行 <code>SAVE</code> 或者 <code>BGSAVE</code> 命令的频率，会导致 <code>Redis</code> 服务器性能骤降，甚至低于传统关系型数据库。</p>
+<p>所以 <code>RDB</code> 持久化更像是一种备份手段而不是一种常规数据持久化方案。</p>
+<h2 id="AOF-持久化"><a href="#AOF-持久化" class="headerlink" title="AOF 持久化"></a>AOF 持久化</h2><p><code>RDB</code> 持久化是全量式操作，而 <code>AOF</code> 是增量操作。</p>
+<p>服务器每次执行完写命令之后，都会以<strong>协议文本</strong>的方式将被执行的写命令追加到 <code>AOF</code> 文件的结尾。在服务器停机之后，只需要重新执行 <code>AOF</code> 文件中保存的 <code>Redis</code> 命令，就可以将数据库恢复至停机之前的状态。</p>
+<blockquote>
+<p><code>AOF</code> 文件中唯一不是用户执行的命令是 <code>SELECT</code>，这是服务器根据用户正在使用的数据库号码自动加上的。</p>
+</blockquote>
+<p>同步命令到 AOF 文件的整个过程可以分为三个阶段：</p>
+<ol>
+<li>命令传播：<code>Redis</code> 将执行完的命令、命令的参数、命令的参数个数等信息发送到 <code>AOF</code> 程序中。</li>
+<li>缓存追加：AOF 程序根据接收到的命令数据，<strong>将命令转换为网络通讯协议的格式</strong>，然后将协议内容追加到服务器的 AOF 缓存中。</li>
+<li>文件写入和保存：AOF 缓存中的内容被写入到 <code>AOF</code> 文件末尾，如果设定的 <code>AOF</code> 保存条件被满足的话， <code>fsync</code> 函数或者 <code>fdatasync</code> 函数会被调用，将写入的内容真正地保存到磁盘中。</li>
+</ol>
+<p>由于默认持久化方式为 <code>RDB</code>，所以用户需要配置 <code>appendonly</code> 选项来打开 <code>AOF</code> 持久化功能：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">appendonly  yes</span><br></pre></td></tr></table></figure>
+
+<p>打开 <code>AOF</code> 持久化功能之后，<code>Redis</code> 在默认情况下会创建一个名为 <code>appendonly.aof</code> 的文件作为 <code>AOF</code> 文件。</p>
+<h3 id="AOF-文件冲洗频率"><a href="#AOF-文件冲洗频率" class="headerlink" title="AOF 文件冲洗频率"></a>AOF 文件冲洗频率</h3><blockquote>
+<p>为了提高程序的写入性能，现代化的操作系统通常会把针对硬盘的多次写操作优化成一次写操作。当程序调用 <code>write</code> 系统调用对文件进行写入时，系统会先将数据写入位于内存的缓冲区中，当到达指定的时限或者满足某些写入条件时，系统才会调用 <code>fsync</code> 或者 <code>fdatasync</code> 函数，将缓冲区数据冲洗至硬盘。</p>
+</blockquote>
+<p>上述机制虽然能提高写入性能，但是对于持久化功能来说，两次执行冲洗操作的间隔会影响持久化的安全性。</p>
+<p><code>Redis</code> 提供了 <code>appendfsync</code> 选项来控制系统冲洗 <code>AOF</code> 文件的频率。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">appendfsync  always|everysec|no</span><br></pre></td></tr></table></figure>
+
+<p><code>appendfsync</code> 有三个可选值，分别代表的意义如下：</p>
+<ul>
+<li>always：每执行一个写命令，就对 <code>AOF</code> 文件执行一次冲洗操作</li>
+<li>everysec：每隔 1s，就对 <code>AOF</code> 文件执行一次冲洗操作</li>
+<li>no：不主动对  <code>AOF</code> 文件执行冲洗操作，由操作系统决定何时对 <code>AOF</code> 进行冲洗。</li>
+</ul>
+<p>对于这三种冲洗策略来说，不同的安全性对应着不同的性能：</p>
+<ul>
+<li>always：最多只会丢失一个命令的数据，但是由于对磁盘的频繁写入，导致 <code>Redis</code> 服务器性能骤降至关系型数据库的水平</li>
+<li>everysec：最多丢失 1s 之内产生的命令数据，这是一种兼顾性能与安全性的折中方案</li>
+<li>no：最多丢失服务器最后一次冲洗 <code>AOF</code> 文件之后产生的所有命令数据，数据量的大小取决于系统冲洗 <code>AOF</code> 文件的频率，不安全</li>
+</ul>
+<p>对比之下，<code>Redis</code> 选择 <code>everysec</code> 作为默认的冲洗策略，除非有明确的需求，否则也不应该修改该选项值。</p>
+<h3 id="AOF-重写"><a href="#AOF-重写" class="headerlink" title="AOF 重写"></a>AOF 重写</h3><p>由于 <code>AOF</code> 的增量特性，<code>AOF</code> 文件会越来越大，其中也会存在一些对相同键执行过的多次修改操作，导致有一部分命令是冗余的。</p>
+<p>例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SELECT 0</span><br><span class="line"></span><br><span class="line">SET  msg  &quot;hello world!&quot;</span><br><span class="line"></span><br><span class="line">SET  msg  &quot;good  bye&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>实际上，上述三条命令可以直接将第二条去掉，执行后最终效果与原来是一致的。这种冗余命令的存在增加了 <code>AOF</code> 文件的体积，恢复数据时耗费时间也越多。</p>
+<p>为了减少冗余命令，<code>Redis</code> 提供了 <code>AOF</code> 重写功能，该功能会能够生成一个全新的 <code>AOF</code> 文件，其中只包含恢复当前数据库所需要的尽可能少的命令。</p>
+<p>对于上面的三条命令来说，<code>AOF</code> 重写之后就会变成如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT 0</span><br><span class="line"></span><br><span class="line">SET  msg  &quot;good  bye&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p> <code>AOF</code> 重写操作可以通过执行 <code>BGREWRITEAOF</code> 命令或者配置选项来触发。</p>
+<h4 id="BGREWRITEAOF"><a href="#BGREWRITEAOF" class="headerlink" title="BGREWRITEAOF"></a>BGREWRITEAOF</h4><p><code>BGREWRITEAOF</code> 是一个无命令参数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis&gt;  BGREWRITEAOF</span><br><span class="line">Background append only file rewriting started</span><br></pre></td></tr></table></figure>
+
+<p>复杂度为 <code>O(N)</code>,<code>N</code> 表示服务器所有数据库包含的键值对总数。</p>
+<p><code>BGREWRITEAOF</code> 是一个异步命令，<code>Redis</code> 服务器接收到该命令之后会创建一个子进程来扫描数据库并生成新的 <code>AOF</code> 文件。当新的 <code>AOF</code> 文件生成完毕，子进程就会退出并通知 <code>Redis</code>，<code>Redis</code> 就会使用新的 <code>AOF</code> 文件代替原有 <code>AOF</code> 文件。</p>
+<p>如果发送 <code>BGREWRITEAOF</code> 请求时，服务器正在创建 <code>RDB</code> 文件，那么服务器会将 <code>AOF</code> 重写操作延后到 <code>RDB</code> 文件创建完毕之后再执行，避免两个写操作同时执行导致服务器性能下降。</p>
+<p>如果服务器在执行重写操作的过程中，又收到了新的 <code>BGREWRITEAOF</code> 命令，那么会返回以下错误：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis&gt;  BGREWRITEAOF</span><br><span class="line">(error) ERR Background append only file rewriting already in progress</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="AOF-重写配置选项"><a href="#AOF-重写配置选项" class="headerlink" title="AOF 重写配置选项"></a>AOF 重写配置选项</h4><p>以下两个配置选项可以设置 <code>Redis</code> 触发 <code>BGREWRITEAOF</code> 命令的条件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">auto-aof-rewrite-min-size  &lt;value&gt;</span><br><span class="line">auto-aof-rewirte-percentage  &lt;value&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>auto-aof-rewrite-min-size</code> 选项用于设置触发 <code>AOF</code> 重写所需要的最小 <code>AOF</code> 文件体积。</p>
+<p>例如对于该选项默认值来说：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">auto-aof-rewrite-min-size  64mb</span><br></pre></td></tr></table></figure>
+
+<p>当 <code>AOF</code> 文件体积小于 64mb 时，服务器不会自动执行 <code>BGREWRITEAOF</code> 命令。</p>
+<p><code>auto-aof-rewirte-percentage</code> 选项配置的值是触发 <code>AOF</code> 重写所需要的文件体积增大比例。</p>
+<p>例如对于该选项默认值来说：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">auto-aof-rewirte-percentage  100</span><br></pre></td></tr></table></figure>
+
+<p>表示当前 <code>AOF</code> 文件体积比最后一次 <code>AOF</code> 文件重写之后的体积增大一倍时，会触发 <code>BGREWRITEAOF</code> 命令。</p>
+<p>如果 <code>Redis</code> 还没有执行过 <code>AOF</code> 文件重写操作，那就会把启动服务器时使用的 <code>AOF</code> 文件体积当做最后一次 <code>AOF</code> 文件重写的体积。</p>
+<p>假设 <code>AOF</code> 文件上次重写之后体积为 300MB，当前 <code>AOF</code> 文件达到 600MB 时,才会触发 <code>AOF</code> 重写操作。</p>
+<h3 id="AOF-持久化优缺点"><a href="#AOF-持久化优缺点" class="headerlink" title="AOF 持久化优缺点"></a>AOF 持久化优缺点</h3><p><code>AOF</code> 持久化的安全性是 <code>RDB</code> 望尘莫及的，正常情况下配置 <code>appendonly everysec</code> 可以将数据丢失的时间压缩至 1s 以内。</p>
+<p>当然，<code>AOF</code> 也有相应的缺点：</p>
+<ul>
+<li><code>AOF</code> 使用协议文本来存储操作,所以文件体积相对于包含相同数据的 <code>RDB</code> 文件来说会大得多，生成 <code>AOF</code> 文件所需的时间也比生成 <code>RDB</code> 文件时间更长</li>
+<li><code>AOF</code> 持久化需要通过执行 <code>AOF</code> 文件中保存的命令来恢复数据库，所以 <code>AOF</code> 持久化数据恢复速度比 <code>RDB</code> 文件恢复慢很多，并且数据库体积越大，差距越明显</li>
+<li><code>AOF</code> 使用的 <code>BGREWRITEAOF</code> 命令也需要创建子进程，如果数据库体积较大，进行 <code>AOF</code> 文件重写会占用大量资源，并导致服务器短暂阻塞。</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-01-02T20:56:33.091Z" itemprop="dateUpdated">2020-01-03 04:56:33</time>
+</span><br>
+
+
+        
+    </div>
+    
+    <footer>
+        <a href="http://changleamazing.com">
+            <img src="/img/logo.jpeg" alt="ChangleAmazing">
+            ChangleAmazing
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis-%E6%8C%81%E4%B9%85%E5%8C%96/" rel="tag">Redis 持久化</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/&title=《Redis 数据持久化》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/&title=《Redis 数据持久化》 — 大音希声，大象无形&source=Redis 是一种内存型数据库，一旦服务器进程退出，数据库的数据就会丢失。为了解决这个问题，Redis 提供了 RDB 持久化、AOF 持久化、RDB-A..." data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Redis 数据持久化》 — 大音希声，大象无形&url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2019/12/12/HashMap/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">HashMap 源码解析</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'false' == 'true',
+            appId: "g8wr7EAnVsuMj5b8roDTXWXp-gzGzoHsz",
+            appKey: "loeTK7v1qdrE1f3ED1tn1hy0",
+            avatar: "mm",
+            placeholder: "Leave Something",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>博客内容遵循 <a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>ChangleAmazing &copy; 2020</span>
+            <span>
+                
+                <a href="http://www.beian.miit.gov.cn/" target="_blank">湘ICP备18002350号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/&title=《Redis 数据持久化》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/&title=《Redis 数据持久化》 — 大音希声，大象无形&source=Redis 是一种内存型数据库，一旦服务器进程退出，数据库的数据就会丢失。为了解决这个问题，Redis 提供了 RDB 持久化、AOF 持久化、RDB-A..." data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Redis 数据持久化》 — 大音希声，大象无形&url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://changleamazing.com/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '？？？';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '！！！';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
