@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>百度分布式 ID 生成器 | 大音希声，大象无形 | 这深夜里一片寂静，是因为你还没有听见声音</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Snowflake,IDGenerator">
+    <meta name="description" content="分布式 ID 生成器是分布式项目开发中的常用工具，弄懂其原理对理解分布式有一定的帮助。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="百度分布式 ID 生成器">
+<meta property="og:url" content="http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/index.html">
+<meta property="og:site_name" content="大音希声，大象无形">
+<meta property="og:description" content="分布式 ID 生成器是分布式项目开发中的常用工具，弄懂其原理对理解分布式有一定的帮助。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-03-045141.jpg">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-03-112957.jpg">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-06-023533.jpg">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-06-033131.png">
+<meta property="article:published_time" content="2020-02-03T02:18:47.000Z">
+<meta property="article:modified_time" content="2020-02-06T07:49:02.026Z">
+<meta property="article:author" content="ChangleAmazing">
+<meta property="article:tag" content="Snowflake">
+<meta property="article:tag" content="IDGenerator">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-03-045141.jpg">
+    
+        <link rel="alternate" type="application/atom+xml" title="大音希声，大象无形" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/logo.jpeg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">ChangleAmazing</h5>
+          <a href="mailto:changle0331@gmail.com" title="changle0331@gmail.com" class="mail">changle0331@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                Home
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/yscoder" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">百度分布式 ID 生成器</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">百度分布式 ID 生成器</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-02-03T02:18:47.000Z" itemprop="datePublished" class="page-time">
+  2020-02-03
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">分布式系统</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#snowflake"><span class="post-toc-number">1.</span> <span class="post-toc-text">snowflake</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#百度-UidGenerator"><span class="post-toc-number">2.</span> <span class="post-toc-text">百度 UidGenerator</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#DefaultUIDGenerator"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">DefaultUIDGenerator</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#delta-seconds"><span class="post-toc-number">2.1.1.</span> <span class="post-toc-text">delta seconds</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#worker-id"><span class="post-toc-number">2.1.2.</span> <span class="post-toc-text">worker id</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#sequence"><span class="post-toc-number">2.1.3.</span> <span class="post-toc-text">sequence</span></a></li></ol></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#CachedUIDGenerator"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">CachedUIDGenerator</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#RingBuffer"><span class="post-toc-number">2.2.1.</span> <span class="post-toc-text">RingBuffer</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#RingBuffer-填充时机"><span class="post-toc-number">2.2.2.</span> <span class="post-toc-text">RingBuffer 填充时机</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#初始化"><span class="post-toc-number">2.2.3.</span> <span class="post-toc-text">初始化</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#取值"><span class="post-toc-number">2.2.4.</span> <span class="post-toc-text">取值</span></a></li></ol></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">总结</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-分布式 id 生成器"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">百度分布式 ID 生成器</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-02-03 10:18:47" datetime="2020-02-03T02:18:47.000Z"  itemprop="datePublished">2020-02-03</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">分布式系统</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>分布式 ID 生成器是分布式项目开发中的常用工具，弄懂其原理对理解分布式有一定的帮助。</p>
+<a id="more"></a>
+
+<p>绝大多数公司使用的分布式 ID 生成器都是依赖于雪花算法（<code>snowflake）</code>实现的。</p>
+<h2 id="snowflake"><a href="#snowflake" class="headerlink" title="snowflake"></a>snowflake</h2><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-03-045141.jpg" alt="snowflake" title="">
+                </div>
+                <div class="image-caption">snowflake</div>
+            </figure>
+
+<p>如上图所示，雪花算法生成 id 为 64 位二进制串，由几个部分组成：</p>
+<ol>
+<li>1 位标识位，默认为 0，因为二进制首位为符号位，一般生成的 id 都要求是正数，所以固定为 0</li>
+<li>41 位时间戳，可以表示的时间为 69 年</li>
+<li>10 位工作机器 id，记录工作机器 id。可以部署在 $2^{10}$ (1024) 个节点上，包括 5 位 datacenterId 和 5 位 workerId</li>
+<li>12 位自增序列。记录同一时间戳内产生的不同 id，支持的序号为$2^{12}$（4096）个</li>
+</ol>
+<p>这样的设计可以保证所有生成的 id 按照时间趋势递增，并且不会产生重复的 id，也可以根据实际节点数扩展或缩减工作机器 id 部分的位数。</p>
+<p>雪花算法的主要缺点是时钟回拨问题。</p>
+<blockquote>
+<p>时钟回拨是指服务器时间因为某些原因导致时间回退。可能导致时钟回拨的原因有多种，比如服务器使用了本地时间，然后服务器校时服务修正了系统时间。</p>
+</blockquote>
+<p>这样会导致生成一个已经使用过的 ID。</p>
+<h2 id="百度-UidGenerator"><a href="#百度-UidGenerator" class="headerlink" title="百度 UidGenerator"></a>百度 UidGenerator</h2><p>百度的 <code>UidGenerator</code> 也是基于 <code>snowflake</code> 来实现的，不过调整了生成的 id 中的组成部分顺序。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-03-112957.jpg" alt="UIDGenerator" title="">
+                </div>
+                <div class="image-caption">UIDGenerator</div>
+            </figure>
+
+<p>如上图所示，<code>UidGenerator</code> 生成的 64 位二进制串主要包括以下几个部分：</p>
+<ol>
+<li>sign：1 位，与 snowflake 一致，固定为 1，即生成的 UID 为正数</li>
+<li>delta seconds：28 位，时间戳，相对于时间基点 <code>2016-05-20</code> 的增量值，单位：秒，最多可支持约 8.7 年</li>
+<li>worker id：22位，机器 id，每次机器启动（包括重启）时由数据库（<code>MySQL</code> 内置 <code>WorkerID</code> 分配器）分配（也可以自定义实现）。</li>
+<li>sequence：13位，同一个时间戳的并发序列，可以支持$2^{13}$ (8192) 个并发。</li>
+</ol>
+<p> <code>UidGenerator</code> 有两种实现方式：<code>DefaultUidGenerator</code>  和 <code>CachedUidGenerator</code>。</p>
+<h3 id="DefaultUIDGenerator"><a href="#DefaultUIDGenerator" class="headerlink" title="DefaultUIDGenerator"></a>DefaultUIDGenerator</h3><h4 id="delta-seconds"><a href="#delta-seconds" class="headerlink" title="delta seconds"></a>delta seconds</h4><p>这个值是当前时间与 <code>epoch</code>时间的时间差，单位为秒。<code>epoch</code> 时间默认为 <code>2016-09-20</code>，需要将它配置为生成分布式 ID 服务上线的时间。</p>
+<h4 id="worker-id"><a href="#worker-id" class="headerlink" title="worker id"></a>worker id</h4><p>worker id 是在机器启动时通过 MySQL 的内置 WorkerID 分配器分配的。UidGenerator 会在生成分布式 ID 的实例启动的时候，向数据库的表中插入一行数据，数据的 ID 值就是 workerId 的值。由于 workerId 默认为 22 位，所以所有实例重启次数不超过 $2^{22} - 1$ 次。</p>
+<h4 id="sequence"><a href="#sequence" class="headerlink" title="sequence"></a>sequence</h4><p>生成 sequence 部分的代码通过 <code>synchronized</code> 关键字保证线程安全，通过简单的异常处理来避免时钟回拨问题。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">nextId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> currentSecond = getCurrentSecond();</span><br><span class="line">    <span class="keyword">if</span> (currentSecond &lt; lastSecond) &#123;</span><br><span class="line">        <span class="keyword">long</span> refusedSeconds = lastSecond - currentSecond;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> UidGenerateException(<span class="string">"Clock moved backwards. Refusing for %d seconds"</span>, refusedSeconds);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (currentSecond == lastSecond) &#123;</span><br><span class="line">        sequence = (sequence + <span class="number">1</span>) &amp; bitsAllocator.getMaxSequence();</span><br><span class="line">        <span class="keyword">if</span> (sequence == <span class="number">0</span>) &#123;</span><br><span class="line">            currentSecond = getNextSecond(lastSecond);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sequence = <span class="number">0L</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    lastSecond = currentSecond;</span><br><span class="line">    <span class="keyword">return</span> bitsAllocator.allocate(currentSecond - epochSeconds, workerId, sequence);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果当前时间与上一次生成 id 时间为同一个时间戳，则增加 <code>sequence</code>。如果 <code>sequence</code> 自增值超过 $，就会通过自旋等待下一秒，而不是直接抛出异常。</p>
+<p>如果当前时间是新的一秒，那么将 <code>sequence</code> 置为 0，重新开始分配该秒对应的 id。</p>
+<h3 id="CachedUIDGenerator"><a href="#CachedUIDGenerator" class="headerlink" title="CachedUIDGenerator"></a>CachedUIDGenerator</h3><p><code>CachedUidGenerator</code> 是 <code>UidGenerator</code> 的重要改进实现。它利用了 <code>RingBuffer</code>（与 <a href="https://github.com/LMAX-Exchange/disruptor/tree/master" target="_blank" rel="noopener">disruptor</a> 一致)。</p>
+<h4 id="RingBuffer"><a href="#RingBuffer" class="headerlink" title="RingBuffer"></a>RingBuffer</h4><p><code>RingBuffer</code> 本质上是一个数组，数组中的每个项被称为 <code>slot</code>。<br><code>CachedUidGenerator</code> 设计了两个 <code>RingBuffer</code>，一个用来保存唯一 ID，一个保存 flag。</p>
+<img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-06-023533.jpg" alt="Uid-Genrator RingBuffer" style="zoom:67%;" />
+
+<p>每个 <code>RingBuffer</code> 容量为 <code>SnowFlake</code> 算法中 <code>sequence</code> 部分最大值，且为 $2^{n}$，对于 <code>UidGenerator</code> 默认设计来说，即为 $2^{13}$。</p>
+<p><code>UID-RingBuffer</code> 中 <code>Tail</code> 与 <code>Cursor</code> 指针用来读写 <code>slot</code>。其中，<code>Tail</code> 指针表示 <code>Producer</code> 生成的最大序号（此序号从 0 开始，持续递增）。<code>Cursor</code> 指针表示 <code>Consumer</code> 消费到的最小序号。</p>
+<p>这两个指针不能超过对方。若 <code>Cursor</code> 指针超过 <code>Tail</code>，则说明消费了还未生产序号，所以当 <code>Cursor</code> 赶上 <code>Tail</code> 时，应该通过 <code>RejectedTakeBufferHandler</code> 指定 <code>TakeRejectPolicy</code>。</p>
+<p>若 <code>Tail</code> 指针超过 <code>Cursor</code> 指针，则说明生产者覆盖了还未消费的 <code>slot</code>。所以当 <code>Tail</code> 赶上 <code>Cursor</code> 时，应该通过 <code>RejectedPutBufferHandler</code> 指定 <code>PutRejectPolicy</code>。</p>
+<p><code>Flag-Ringbuffer</code> 用来记录每个 <code>slot</code> 的状态（是否可填充、是否可消费）。</p>
+<p>由于数组元素在内存中是连续分配的，这样可以最大程度利用 <code>Cpu Cache</code> 提升性能，但是会带来 <code>伪共享</code> 问题。</p>
+<p>为了解决该问题，<code>Uid-Generator</code> 在 <code>Tail</code>、<code>Cursor</code>、<code>Flag-RingBuffer</code> 中采用 <code>CacheLine</code> 补齐方式。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-06-033131.png" alt="FalseSharing" title="">
+                </div>
+                <div class="image-caption">FalseSharing</div>
+            </figure>
+
+<p>这里的说明可以看 <a href="https://github.com/baidu/uid-generator/issues/4" target="_blank" rel="noopener"> RingBuffer 中补齐问题</a> 。</p>
+<h4 id="RingBuffer-填充时机"><a href="#RingBuffer-填充时机" class="headerlink" title="RingBuffer 填充时机"></a>RingBuffer 填充时机</h4><p><code>RingBuffer</code> 共有三种填充方式</p>
+<ul>
+<li><p>初始化预填充</p>
+<p><code>RingBuffer</code> 初始化时，预先填充整个 <code>RingBuffer</code>。</p>
+</li>
+<li><p>即时填充</p>
+<p>消费 <code>slot</code> 时，即时检查剩余可以消费的 <code>slot</code>（<code>tail - cursor</code>)。如果小于设定阈值，则填充空余 <code>slots</code>。</p>
+</li>
+<li><p>周期填充</p>
+<p>通过 <code>Schedule</code> 线程，定时补全空闲 <code>slots</code>。</p>
+</li>
+</ul>
+<p>上面分析了 <code>CachedUidGenerator</code> 依赖的数据结构，下面分析它的实现。实际上它继承了 <code>DefaultUidGenerator</code>，所以它是对 <code>DefaultUidGenerator</code> 的增强。</p>
+<h4 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h4><p><code>CachedUidGenerator</code> 在初始化时会给 <code>workerId</code> 赋值，方式与 <code>DefaultUidGenerator</code> 一致。还会初始化 <code>RingBuffer</code>，这个过程包括的操作有：</p>
+<ol>
+<li>根据 <code>boostPower</code> 确定 <code>RingBuffer</code> 的 <code>size</code></li>
+<li>构造 <code>RingBuffer</code>，默认 <code>paddingFactor</code> 为 50。即当 <code>RingBuffer</code> 中剩余可用 ID 数量少于 50% 时，就触发一个异步线程往 <code>RingBuffer</code> 中填充新的 ID，直到填满为止</li>
+<li>判断是否配置了 <code>scheduleInterval</code> 属性值，这个值表示检查填充的周期。默认不配置</li>
+<li>初始化 <code>Put</code> 操作拒绝策略，对应属性 <code>rejectedPutBufferHandler</code>。即当 <code>RingBuffer</code> 已满，无法继续填充时的操作策略。默认情况下会丢弃<code>Put</code> 操作，记录日志。如果有需求，可以自定义实现 <code>RejectedPutBufferHandler</code> 接口</li>
+<li>初始化 <code>Take</code> 操作拒绝策略，对应属性 <code>rejectedTakeBufferHandler</code>。即 <code>RingBuffer</code> 中没有可以使用的 ID 时的操作策略。默认情况下会记录日志并抛出 <code>UidGenerateException</code> 异常。如果有需求，可以自定义实现 <code>RejectedTakeBufferHandler</code> 接口</li>
+<li>初始化填满 <code>RingBuffer</code> 中所有 <code>slot</code></li>
+<li>开启 <code>buffer</code> 补丁线程（需配置 <code>scheduleInterval</code> ）</li>
+</ol>
+<p>第二步中的异步线程实现是 <code>UidGenerator</code> 解决时钟回拨的关键。在满足填充新的 ID 条件时，通过时间值递增得到新的时间值，而不是获取当前时间。</p>
+<h4 id="取值"><a href="#取值" class="headerlink" title="取值"></a>取值</h4><p><code>RingBuffer</code> 初始化之后，就是取值过程了：</p>
+<ol>
+<li>如果剩余可用 ID 百分比低于 <code>paddingFactor</code> 参数指定值，就会异步生成若干个 ID 集合，直到将 <code>RingBuffer</code> 填满。</li>
+<li>如果获取值的位置追上了 <code>tail&#39;</code> 指针，就会执行 <code>Task</code> 操作的拒绝策略。</li>
+<li>获取 <code>slot</code> 中的分布式 ID。</li>
+<li>将该 <code>slot</code> 对应的 <code>flag</code> 设置为 <code>CAN_PUT_FLAG</code>。</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>绝大多数分布式 ID 生成器都是基于 <code>SnowFlake</code> 来实现的，而 <code>SnowFlake</code> 也有一些缺点。</p>
+<p>本文中提到 <code>Uid-Generator</code> 通过自增列、<code>RingBuffer</code> 以及时间递增的措施解决了 <code>SnowFlake</code> 的传统问题。</p>
+<p>这其中也涉及到一些计算机底层原理，关于该部分知识的解析会在其它文章中继续分析。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-02-06T07:49:02.026Z" itemprop="dateUpdated">2020-02-06 15:49:02</time>
+</span><br>
+
+
+        
+    </div>
+    
+    <footer>
+        <a href="http://changleamazing.com">
+            <img src="/img/logo.jpeg" alt="ChangleAmazing">
+            ChangleAmazing
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/IDGenerator/" rel="tag">IDGenerator</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Snowflake/" rel="tag">Snowflake</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/&title=《百度分布式 ID 生成器》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/&title=《百度分布式 ID 生成器》 — 大音希声，大象无形&source=分布式 ID 生成器是分布式项目开发中的常用工具，弄懂其原理对理解分布式有一定的帮助。" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《百度分布式 ID 生成器》 — 大音希声，大象无形&url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/01/02/Redis%20%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Redis 数据持久化</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'false' == 'true',
+            appId: "g8wr7EAnVsuMj5b8roDTXWXp-gzGzoHsz",
+            appKey: "loeTK7v1qdrE1f3ED1tn1hy0",
+            avatar: "mm",
+            placeholder: "Leave Something",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>博客内容遵循 <a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>ChangleAmazing &copy; 2020</span>
+            <span>
+                
+                <a href="http://www.beian.miit.gov.cn/" target="_blank">湘ICP备18002350号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/&title=《百度分布式 ID 生成器》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/&title=《百度分布式 ID 生成器》 — 大音希声，大象无形&source=分布式 ID 生成器是分布式项目开发中的常用工具，弄懂其原理对理解分布式有一定的帮助。" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《百度分布式 ID 生成器》 — 大音希声，大象无形&url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://changleamazing.com/2020/02/03/%E5%88%86%E5%B8%83%E5%BC%8F%20id%20%E7%94%9F%E6%88%90%E5%99%A8/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '？？？';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '！！！';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
