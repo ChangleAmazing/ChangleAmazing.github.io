@@ -33,7 +33,7 @@
 <meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-06-023533.jpg">
 <meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-02-06-033131.png">
 <meta property="article:published_time" content="2020-02-03T02:18:47.000Z">
-<meta property="article:modified_time" content="2020-02-06T07:49:02.026Z">
+<meta property="article:modified_time" content="2020-02-06T07:50:44.843Z">
 <meta property="article:author" content="ChangleAmazing">
 <meta property="article:tag" content="Snowflake">
 <meta property="article:tag" content="IDGenerator">
@@ -284,7 +284,7 @@
 <h4 id="取值"><a href="#取值" class="headerlink" title="取值"></a>取值</h4><p><code>RingBuffer</code> 初始化之后，就是取值过程了：</p>
 <ol>
 <li>如果剩余可用 ID 百分比低于 <code>paddingFactor</code> 参数指定值，就会异步生成若干个 ID 集合，直到将 <code>RingBuffer</code> 填满。</li>
-<li>如果获取值的位置追上了 <code>tail&#39;</code> 指针，就会执行 <code>Task</code> 操作的拒绝策略。</li>
+<li>如果获取值的位置追上了 <code>tail</code> 指针，就会执行 <code>Task</code> 操作的拒绝策略。</li>
 <li>获取 <code>slot</code> 中的分布式 ID。</li>
 <li>将该 <code>slot</code> 对应的 <code>flag</code> 设置为 <code>CAN_PUT_FLAG</code>。</li>
 </ol>
@@ -299,7 +299,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2020-02-06T07:49:02.026Z" itemprop="dateUpdated">2020-02-06 15:49:02</time>
+    最后更新时间：<time datetime="2020-02-06T07:50:44.843Z" itemprop="dateUpdated">2020-02-06 15:50:44</time>
 </span><br>
 
 
