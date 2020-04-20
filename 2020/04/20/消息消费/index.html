@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>消息消费 | 大音希声，大象无形 | 这深夜里一片寂静，是因为你还没有听见声音</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Kafka,Message Queue">
+    <meta name="description" content="消息拉取消息消费一般有两种模式，推模式与拉模式。推模式是服务端主动将消息推送给消费者，而拉模式是消费者主动向服务端发起请求来拉取消息。Kafka 中的消息消费基于拉模式。 拉模式主要方法为 poll() 方法： 1ConsumerRecords&lt;K, V&gt; poll(Duration timeout);  当有消息待消费时，该方法会立即返回。否则，会等待参数 timeout 指定的时间">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息消费">
+<meta property="og:url" content="http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/index.html">
+<meta property="og:site_name" content="大音希声，大象无形">
+<meta property="og:description" content="消息拉取消息消费一般有两种模式，推模式与拉模式。推模式是服务端主动将消息推送给消费者，而拉模式是消费者主动向服务端发起请求来拉取消息。Kafka 中的消息消费基于拉模式。 拉模式主要方法为 poll() 方法： 1ConsumerRecords&lt;K, V&gt; poll(Duration timeout);  当有消息待消费时，该方法会立即返回。否则，会等待参数 timeout 指定的时间">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-04-20-121854.jpg">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-04-20-175306.jpg">
+<meta property="article:published_time" content="2020-04-19T16:45:00.000Z">
+<meta property="article:modified_time" content="2020-04-20T19:41:09.069Z">
+<meta property="article:author" content="ChangleAmazing">
+<meta property="article:tag" content="Kafka">
+<meta property="article:tag" content="Message Queue">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-04-20-121854.jpg">
+    
+        <link rel="alternate" type="application/atom+xml" title="大音希声，大象无形" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/logo.jpeg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">ChangleAmazing</h5>
+          <a href="mailto:changle0331@gmail.com" title="changle0331@gmail.com" class="mail">changle0331@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                Home
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/yscoder" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">消息消费</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">消息消费</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-04-19T16:45:00.000Z" itemprop="datePublished" class="page-time">
+  2020-04-20
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Kafka/">Kafka</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#消息拉取"><span class="post-toc-number">1.</span> <span class="post-toc-text">消息拉取</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#消费位移"><span class="post-toc-number">2.</span> <span class="post-toc-text">消费位移</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#位移提交"><span class="post-toc-number">3.</span> <span class="post-toc-text">位移提交</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#消息处理前提交"><span class="post-toc-number">3.1.</span> <span class="post-toc-text">消息处理前提交</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#消息处理后提交"><span class="post-toc-number">3.2.</span> <span class="post-toc-text">消息处理后提交</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#自动提交"><span class="post-toc-number">3.3.</span> <span class="post-toc-text">自动提交</span></a></li></ol></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#控制消费"><span class="post-toc-number">4.</span> <span class="post-toc-text">控制消费</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-消息消费"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">消息消费</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-04-20 00:45:00" datetime="2020-04-19T16:45:00.000Z"  itemprop="datePublished">2020-04-20</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Kafka/">Kafka</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h3 id="消息拉取"><a href="#消息拉取" class="headerlink" title="消息拉取"></a>消息拉取</h3><p>消息消费一般有两种模式，推模式与拉模式。<br>推模式是服务端主动将消息推送给消费者，而拉模式是消费者主动向服务端发起请求来拉取消息。<strong>Kafka 中的消息消费基于拉模式。</strong></p>
+<p>拉模式主要方法为 <code>poll()</code> 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ConsumerRecords&lt;K, V&gt; <span class="title">poll</span><span class="params">(Duration timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>当有消息待消费时，该方法会立即返回。否则，会等待参数 <code>timeout</code> 指定的时间。<strong>从 Kafka 2.0.0 开始，<code>timeout</code> 类型从 <code>long</code> 变为 JDK8 中新的时间类型 <code>Duration</code>。</strong></p>
+<p>Kafka 的消息消费是不断轮询的过程，消费者会重复调用 <code>poll()</code> 方法，获取所订阅的主题的一组消息。</p>
+<p>消费者消费到的每条消息类型为 <code>ConsumerRecord</code>，与发送者发送的消息类型 <code>ProducerRecord</code> 对应。</p>
+<h3 id="消费位移"><a href="#消费位移" class="headerlink" title="消费位移"></a>消费位移</h3><p>Kafka 的分区中，每条消息都有唯一的 offset。这个 offset 在消费端也存在，用来表示消费到的消息在所在分区中的位置。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-04-20-121854.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p><strong>消费位移对应图中的 position，表示下一条需要拉取的消息的位置。</strong><br>在消费端拉取消息时，返回的是没有被消费过的消费集，这需要记录已经被消费的消息的位移，Kafka 将该位移持久化保存，否则当消费者重启之后就无法知道消费位移。另一种情况是当消费端有新的消费者加入之后，分区与消费者的关系会被重新分配，如果不保存分区的消费位移，新绑定的消费者就无法知道从哪个消息开始消费。</p>
+<p>消费位移的存储从 Zookeeper 中转移到了 Kafka 内部主题 <code>_consumer_offsets</code> 中。</p>
+<h3 id="位移提交"><a href="#位移提交" class="headerlink" title="位移提交"></a>位移提交</h3><p>将消费位移持久化的动作称为“提交”，消费者在消费完消息之后需要执行消费位移的提交。</p>
+<p>确定位移提交的时机是一个难题。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-04-20-175306.jpg" alt="位移提交" title="">
+                </div>
+                <div class="image-caption">位移提交</div>
+            </figure>
+
+<p>在上图情况下，消费者拉取到了区间 [x+2,x+7] 的消息，并且正在处理 x+5 对应的消息。</p>
+<h4 id="消息处理前提交"><a href="#消息处理前提交" class="headerlink" title="消息处理前提交"></a>消息处理前提交</h4><p>假设在 <code>poll()</code> 方法拉取到消息之后立刻进行位移提交，即消费位移置为 x+8。如果对 x+5 对应消息处理出现异常，在故障恢复之后，重新拉取的消息会从 x+8 开始的，这会导致区间 [x+5,x+7] 的消息未被消费，发生消息丢失的情况。</p>
+<h4 id="消息处理后提交"><a href="#消息处理后提交" class="headerlink" title="消息处理后提交"></a>消息处理后提交</h4><p>假设在 <code>poll()</code> 方法拉取到消息并且将消息处理完毕再提交，如果仍然是处理到 x+5 时发生异常，故障恢复后从 x+2 位置重新开始消费，那么区间 [x+2,x+4] 的消息会被二次消费，发生重复消费的情况。</p>
+<h4 id="自动提交"><a href="#自动提交" class="headerlink" title="自动提交"></a>自动提交</h4><p>Kafka 默认的位移提交方式是自动提交，对应的参数为 <code>enable.auto.commit</code>，值为 true。自动提交的周期由参数 <code>auto.commit.interval.ms</code> 控制，默认值为 5s。</p>
+<p>在默认的方式下，消费者每隔 5s 会将每个分区中最大的消息位移进行提交。提交的动作是在 <code>poll()</code> 方法的逻辑里完成的，在每次真正向服务端发起拉取请求之前会检查是否可以进行位移提交。</p>
+<p>自动提交不需要我们进行额外的处理，但是自动提交也会带来重复消费与消息丢失的问题。<br>当消费一批消息后而在位移提交前消费者崩溃了，那么故障恢复后，这些消息又会被重新消费一次。<br>消息丢失的发生条件会苛刻一些。假设消费者端在拉取到了消息之后，将消息不断地放入本地缓存中，比如 <code>BlockingQueue</code> 中，而另一个线程对 <code>BlockingQueue</code> 中的数据进行处理。此时拉取线程直接返回处理完毕，在下一次拉取时进行位移提交。如果此时 <code>BlockingQueue</code> 中上一次拉取的数据还未被处理，且此时处理线程发生了异常，会导致之前被拉取的消息丢失了。</p>
+<h3 id="控制消费"><a href="#控制消费" class="headerlink" title="控制消费"></a>控制消费</h3><p>在某些应用场景下需要暂停某些分区消费先消费其它分区，之后再恢复该分区的消费。<br>KafkaConsumer 中使用 <code>pause()</code> 与 <code>resume()</code> 方法实现暂停分区消费与恢复分区消费的操作，除此之外，还提供了 <code>paused()</code> 方法返回被暂停消费的分区集合。</p>
+<p>KafkaConsumer 提供了 <code>wakeup()</code> 方法让其他线程安全调用，退出拉取消息的逻辑，抛出 <code>WakeupException</code>。</p>
+<p>当消费端发生异常跳出循环之后，我们必须显示地执行关闭动作来释放占用的资源。KafkaConsumer 提供了 <code>close()</code> 方法来实现资源释放。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">(Duration timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>第一种方法调用之后，会等待 Kafka 进行一些需要的清理操作，如果开启了自动提交消费位移，这里还会触发一次提交，虽然方法参数没有设置时间，但是 Kafka 内部默认等待时间为 30s。<br>第二种方式则限制了在指定时间内完成对 Kafka 关闭的收尾工作，如果时间很短，消费者会在没有自动提交消费位移的情况下被强制关闭。<br><strong>wakeup() 方法不应该被用来中断 close() 方法。</strong></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-04-20T19:41:09.069Z" itemprop="dateUpdated">2020-04-21 03:41:09</time>
+</span><br>
+
+
+        
+    </div>
+    
+    <footer>
+        <a href="http://changleamazing.com">
+            <img src="/img/logo.jpeg" alt="ChangleAmazing">
+            ChangleAmazing
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kafka/" rel="tag">Kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Message-Queue/" rel="tag">Message Queue</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/&title=《消息消费》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/&title=《消息消费》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《消息消费》 — 大音希声，大象无形&url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/04/19/%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8E%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">序列化与反序列化</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'false' == 'true',
+            appId: "g8wr7EAnVsuMj5b8roDTXWXp-gzGzoHsz",
+            appKey: "loeTK7v1qdrE1f3ED1tn1hy0",
+            avatar: "mm",
+            placeholder: "Leave Something",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>博客内容遵循 <a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>ChangleAmazing &copy; 2020</span>
+            <span>
+                
+                <a href="http://www.beian.miit.gov.cn/" target="_blank">湘ICP备18002350号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/&title=《消息消费》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/&title=《消息消费》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《消息消费》 — 大音希声，大象无形&url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://changleamazing.com/2020/04/20/%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '？？？';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '！！！';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
