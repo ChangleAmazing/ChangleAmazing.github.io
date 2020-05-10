@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://changleamazing.com/"/>
-  <updated>2020-05-10T06:27:01.386Z</updated>
+  <updated>2020-05-10T17:12:01.943Z</updated>
   <id>http://changleamazing.com/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>MySQL BTREE 索引分析</title>
+    <link href="http://changleamazing.com/2020/05/11/BTREE%20%E7%B4%A2%E5%BC%95/"/>
+    <id>http://changleamazing.com/2020/05/11/BTREE%20%E7%B4%A2%E5%BC%95/</id>
+    <published>2020-05-10T17:11:18.000Z</published>
+    <updated>2020-05-10T17:12:01.943Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文主要基于 InnoDB 的 BTREE 索引来分析索引。</p><a id="more"></a><blockquote><p>索引是帮助 MySQL 高效获取数据的数据结构</p></blockquote><h2 id="前置知识"><a href="#前置知识" class="headerlink" title="前置知识"></a>前置知识</h2><h3 id="磁盘-IO"><a href="#磁盘-IO" class="headerlink" title="磁盘 IO"></a>磁盘 IO</h3><p>先看一下磁盘的结构：</p><img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-10-142445.gif" alt="磁盘结构" style="zoom:67%;" /><p>一块磁盘有多个磁道组成，磁道上的每一个弧段即为一个扇区，扇区大小一般为 512B。</p><p>InnoDB 的数据存储在磁盘上，磁盘读取数据依靠的是机械运动。每次读取数据时间 = 寻道时间 + 旋转延迟 + 传输时间。</p><p>寻道时间指磁头移动到指定磁道所需要的时间，一般在 5ms 左右；</p><p>旋转延迟是指磁盘在磁道上找到指定扇区所需要花费的时间，假设磁盘转速为 7200 转/min，则每秒钟可以转 120 圈，磁头旋转到离当前位置最远的扇区（即磁盘对面）需要转半圈，所以旋转延迟最大为：1/2/120 = 4.17 ms；</p><p>传输时间是指与磁盘进行读写交互的时间，系统每一次读取磁盘是以页(逻辑概念，对应物理概念为盘块，即多个扇区,<strong>大小默认为</strong> <strong>4KB</strong>)为单位,读取花费时间大概在 0.3 ms 左右。</p><p>页大小通过命令 <code>getconf PAGE_SIZE</code> 获取：</p><img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-10-145926.png" alt="image-20200510225926632" style="zoom:40%;" /><p>根据 <a href="https://baike.baidu.com/item/%E5%B1%80%E9%83%A8%E6%80%A7%E5%8E%9F%E7%90%86/3334556?fr=aladdin" target="_blank" rel="noopener">局部性原理</a> 来说，计算机访问一个地址的数据时，与其相邻的数据很快也会被访问到，所以操作系统针对此进行了优化，在传输数据时，以页为单位读取数据，这样很在访问同一页内的数据时，只会发生一次磁盘 IO，大大减少了读取数据总耗时。这个理论对于索引的数据结构设计非常有帮助。</p><h2 id="索引数据结构"><a href="#索引数据结构" class="headerlink" title="索引数据结构"></a>索引数据结构</h2><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-10-155751.png" alt="B+树" title="">                </div>                <div class="image-caption">B+树</div>            </figure><p>索引的结构如图所示，是一颗 b+ 树。图中每一个节点称为一个数据页（<strong>默认为 16K</strong>，这是 MySQL 磁盘管理的最小单位，与操作系统页大小不同），每个数据页中都包含若干个数据项，对于非叶子节点来说，数据项为指引搜索方向的指针；对于叶子节点来说，存储的是实际数据。</p><img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-10-155202.png" alt="image-20200510235202821" style="zoom:47%;" /><p>从根节点开始从 b+ 树中找到所需数据需要的 IO 次数不超过层数。而当数据量一定时，每个节点中存储的指针项越多，b+ 树的层数越少，这样查找数据的 IO 次数也会变少，性能大幅提升。</p><p>有了上述理论之后，这里引入一个 b+ 树与 b 树的区别：<strong>b+ 树中非叶子节点只存储指针，不存储实际数据；而 b 树的非叶子节点中既存储指针，又存储数据。</strong></p><p>因为 b+ 树这样的设计，可以保证在同一个数据页中，可以存储更多的数据项，从而使得 b+ 树层数更少，因此 IO 次数更少，查找数据性能更强。</p><h2 id="聚集索引与辅助索引"><a href="#聚集索引与辅助索引" class="headerlink" title="聚集索引与辅助索引"></a>聚集索引与辅助索引</h2><p>存在一张表，建表语句如下：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE users(</span><br><span class="line">    id INT NOT NULL,</span><br><span class="line">    first_name VARCHAR(20) NOT NULL,</span><br><span class="line">    last_name VARCHAR(20) NOT NULL,</span><br><span class="line">    age INT NOT NULL,</span><br><span class="line">    PRIMARY KEY(id),</span><br><span class="line">    KEY(last_name, first_name, age)</span><br><span class="line">    KEY(first_name)</span><br><span class="line">);</span><br></pre></td></tr></table></figure><blockquote><p>聚集索引是指根据表中主键顺序构建的一颗 b+ 树，并且在叶子节点中存放表的行记录。</p><p>表中没有指定主键时，根据顺序取唯一索引的第一列作为聚集索引的键；如果表中不存在唯一索引时，MySQL 会新建一个隐藏列，对不同的行设定序号来构建聚集索引。</p></blockquote><p><img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-10-161023.png" alt="聚集索引"></p><p><strong>这里只是为了表现聚集索引的特点，所以结构上忽略了一些特性，如连接叶子节点的链表等。</strong></p><p>从图上可以知道，聚集索引的叶子节点保存了整行数据，而不是其中的一部分，所以聚集索引构成的 b+ 树也就是表数据存储的形式。所有正常的表有且仅有一个聚集索引。</p><p>辅助索引也是通过 b+ 树实现的，但是其叶子节点并不包括行记录全部数据，只会包括索引中的键以及聚集索引中的键。辅助索引用于加速数据查找，所以一张表上往往建立多个辅助索引来提升数据库的性能。但是辅助索引数量一般不超过 5 个，否则修改数据时，维护索引的时间会大大影响数据库操作的性能。</p><p>假设数据库存在辅助索引（first_name,age)，则该索引构成的 b+ 树会如下图所示。</p><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-10-162059.png" alt="辅助索引" title="">                </div>                <div class="image-caption">辅助索引</div>            </figure><p>可以看到，其叶子节点中存放的数据包括索引列 <code>first_name,age</code> 与该表的聚集索引键 <code>id</code>。当查找到 <code>id</code> 后，会再去聚集索引中根据 <code>id</code> 获取整行记录。</p><h2 id="索引注意事项"><a href="#索引注意事项" class="headerlink" title="索引注意事项"></a>索引注意事项</h2><ul><li><p>遵循最左前缀匹配原则</p><p>MySQL 会一直向右匹配直到遇到范围查询（&gt;、&lt;、between、like）就停止匹配。比如存在（a,b,c,d）顺序的索引，查询条件为 <code>a = 1 and b = 2 and c &gt; 3 and d = 4</code> ，d 无法使用索引。</p></li><li><p>选择区分度高的列作为索引列</p><p>区分度计算公式为 <code>count(distinct col)/count(*)</code>，表示字段不重复的比例。如果某索引列中重复数据很多，需要扫描很多次辅助索引表，再去主键索引中查找对应数据，很可能超过了全表扫描获取数据的时间。</p></li><li><p>索引不会包含含有 NULL 值的列</p><p>因为 NULL 无法参与计算，因此也无法构建 b+ 树</p></li><li><p>使用短索引</p><p>对一个字符串列创建索引时，很可能前几位就能区别出大多数数据，那就根据这几位来创建索引，而不是用整列创建索引。因为索引键也要存储在磁盘上，减少索引键长度可以节省磁盘并且减少 IO 操作</p></li><li><p>索引列不应该参与运算</p><p>因为索引键存的是列原始值，如果对列进行运算，得到的结果是无法在索引中直接找到的，需要对索引所有键都进行运算，而这个开销可能早已超过全表扫描了</p></li></ul><h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul><li><a href="https://draveness.me/mysql-innodb/" target="_blank" rel="noopener">『浅入浅出』MySQL 和 InnoDB</a></li><li><a href="https://tech.meituan.com/2014/06/30/mysql-index.html" target="_blank" rel="noopener">  MySQL索引原理及慢查询优化</a></li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本文主要基于 InnoDB 的 BTREE 索引来分析索引。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="MySQL" scheme="http://changleamazing.com/categories/MySQL/"/>
+    
+    
+      <category term="MySQL" scheme="http://changleamazing.com/tags/MySQL/"/>
+    
+      <category term="DataBase" scheme="http://changleamazing.com/tags/DataBase/"/>
+    
+  </entry>
   
   <entry>
     <title>AQS 源码分析</title>
