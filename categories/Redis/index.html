@@ -145,6 +145,18 @@
             ">全部</a>
         
 
+            <a href="/categories/Concurrency-SourceCode/" style="-webkit-order:4;order:4" class="tags-list-item waves-effect waves-button waves-light">Concurrency,SourceCode</a>
+
+        
+
+            <a href="/categories/MySQL/" style="-webkit-order:5;order:5" class="tags-list-item waves-effect waves-button waves-light">MySQL</a>
+
+        
+
+            <a href="/categories/Java-Collections-SourceCode/" style="-webkit-order:6;order:6" class="tags-list-item waves-effect waves-button waves-light">Java Collections,SourceCode</a>
+
+        
+
             <a href="/categories/Kafka/" style="-webkit-order:0;order:0" class="tags-list-item waves-effect waves-button waves-light">Kafka</a>
 
         
@@ -158,18 +170,6 @@
         
 
             <a href="/categories/Distributed-system/" style="-webkit-order:3;order:3" class="tags-list-item waves-effect waves-button waves-light">Distributed system</a>
-
-        
-
-            <a href="/categories/Concurrency-SourceCode/" style="-webkit-order:4;order:4" class="tags-list-item waves-effect waves-button waves-light">Concurrency,SourceCode</a>
-
-        
-
-            <a href="/categories/Java-Collections-SourceCode/" style="-webkit-order:5;order:5" class="tags-list-item waves-effect waves-button waves-light">Java Collections,SourceCode</a>
-
-        
-
-            <a href="/categories/MySQL/" style="-webkit-order:6;order:6" class="tags-list-item waves-effect waves-button waves-light">MySQL</a>
 
         
     </nav>
@@ -365,6 +365,27 @@ var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
 <script src="/js/search.min.js?v=1.7.2" async></script>
 
 
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
 
 
 

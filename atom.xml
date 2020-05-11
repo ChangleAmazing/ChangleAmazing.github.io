@@ -85,11 +85,11 @@
       <category term="Spring,SourceCode" scheme="http://changleamazing.com/categories/Spring-SourceCode/"/>
     
     
+      <category term="SourceCode" scheme="http://changleamazing.com/tags/SourceCode/"/>
+    
       <category term="Ioc" scheme="http://changleamazing.com/tags/Ioc/"/>
     
       <category term="Spring" scheme="http://changleamazing.com/tags/Spring/"/>
-    
-      <category term="SourceCode" scheme="http://changleamazing.com/tags/SourceCode/"/>
     
   </entry>
   
@@ -308,9 +308,9 @@
       <category term="Java Collections,SourceCode" scheme="http://changleamazing.com/categories/Java-Collections-SourceCode/"/>
     
     
-      <category term="HashMap" scheme="http://changleamazing.com/tags/HashMap/"/>
-    
       <category term="SourceCode" scheme="http://changleamazing.com/tags/SourceCode/"/>
+    
+      <category term="HashMap" scheme="http://changleamazing.com/tags/HashMap/"/>
     
   </entry>
   
