@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>CAP 定理与 BASE 理论 | 大音希声，大象无形 | 这深夜里一片寂静，是因为你还没有听见声音</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Distributed Theory">
+    <meta name="description" content="CAP 定理CAP 定理原来是科学家埃里克·布鲁尔提出的一个猜想，之后被赛斯·吉尔伯特和南希·林奇证明，成为了一个定理。 CAP 定理指出对于一个分布式系统，不可能同时满足以下三点：  一致性（Consistence）：数据在多个节点之间能保持一致的特性， 可用性（Availability）：系统必须一直处于可用的状态，每次请求都能获取到非错的响应，但是不保证获取的数据为最新数据 分区容错性（Pa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CAP 定理与 BASE 理论">
+<meta property="og:url" content="http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/index.html">
+<meta property="og:site_name" content="大音希声，大象无形">
+<meta property="og:description" content="CAP 定理CAP 定理原来是科学家埃里克·布鲁尔提出的一个猜想，之后被赛斯·吉尔伯特和南希·林奇证明，成为了一个定理。 CAP 定理指出对于一个分布式系统，不可能同时满足以下三点：  一致性（Consistence）：数据在多个节点之间能保持一致的特性， 可用性（Availability）：系统必须一直处于可用的状态，每次请求都能获取到非错的响应，但是不保证获取的数据为最新数据 分区容错性（Pa">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-13-195638.jpg">
+<meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-14-090450.jpg">
+<meta property="article:published_time" content="2020-05-14T12:29:56.000Z">
+<meta property="article:modified_time" content="2020-05-14T13:11:23.183Z">
+<meta property="article:author" content="ChangleAmazing">
+<meta property="article:tag" content="Distributed Theory">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-13-195638.jpg">
+    
+        <link rel="alternate" type="application/atom+xml" title="大音希声，大象无形" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/logo.jpeg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">ChangleAmazing</h5>
+          <a href="mailto:changle0331@gmail.com" title="changle0331@gmail.com" class="mail">changle0331@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                Home
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/ChangleAmazing" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">CAP 定理与 BASE 理论</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">CAP 定理与 BASE 理论</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-05-14T12:29:56.000Z" itemprop="datePublished" class="page-time">
+  2020-05-14
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">分布式系统</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#CAP-定理"><span class="post-toc-number">1.</span> <span class="post-toc-text">CAP 定理</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#证明"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">证明</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#AP-与-CP-的应用"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">AP 与 CP 的应用</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#BASE-理论"><span class="post-toc-number">2.</span> <span class="post-toc-text">BASE 理论</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-CAP 定理与 BASE 理论"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">CAP 定理与 BASE 理论</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-05-14 20:29:56" datetime="2020-05-14T12:29:56.000Z"  itemprop="datePublished">2020-05-14</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">分布式系统</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="CAP-定理"><a href="#CAP-定理" class="headerlink" title="CAP 定理"></a>CAP 定理</h2><p>CAP 定理原来是科学家埃里克·布鲁尔提出的一个猜想，之后被赛斯·吉尔伯特和南希·林奇证明，成为了一个定理。</p>
+<p>CAP 定理指出对于一个分布式系统，不可能同时满足以下三点：</p>
+<ul>
+<li>一致性（Consistence）：数据在多个节点之间能保持一致的特性，</li>
+<li>可用性（Availability）：系统必须一直处于可用的状态，每次请求都能获取到非错的响应，但是不保证获取的数据为最新数据</li>
+<li>分区容错性（Partition tolerance）：系统节点之间由于网络问题产生了分区时仍然能保持正常服务</li>
+</ul>
+<img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-13-195638.jpg" alt="CAP  5:14:2020" style="zoom:33%;" />
+
+
+
+<h3 id="证明"><a href="#证明" class="headerlink" title="证明"></a>证明</h3><p>下面证明一下为什么三个特性不能同时存在。</p>
+<p>保证 AP：在分布式系统产生分区时，保持每个节点都对外提供服务，但是这种情况下节点内部通信时间延长或者失败，导致它们无法同步最新的数据，无法满足 C。</p>
+<p>保证 CP：在分布式系统产生分区时，保证不同节点中的数据一致。如果节点对外继续提供服务，则可能产生新的数据，导致与其他节点数据不一致，为了保证一致性，需要对外提供服务的节点返回系统处理失败，无法满足 A。</p>
+<p>对于分布式系统来说，保证 CA 的系统比较特殊，由上面两种情况可以知道，无法在存在分区的情况下还能保证系统的 CA 特性。那存不存在完全不会产生分区的分布式系统呢？假设一台机器每年宕机一天，那么一个包含 365 个节点的系统就可能每天都会产生宕机，除此之外还有运营商网络通信的异常，所以 P 是无法忽视的。</p>
+<p>由于分区是否产生不受我们的控制，所以一般认为 P 是必须提供的，因此这个 CAP 定理可以转化为以下描述：</p>
+<p><strong>在系统满足分区容忍性的情况下，要么保证数据一致性，要么保证可用性。</strong></p>
+<img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-14-090450.jpg" alt="AC Switch" style="zoom:33%;" />
+
+<p> 如上图所示，P 存在的情况下，AC 只能二选一。</p>
+<h3 id="AP-与-CP-的应用"><a href="#AP-与-CP-的应用" class="headerlink" title="AP 与 CP 的应用"></a>AP 与 CP 的应用</h3><p>AP 与 CP 的选择我们可以从 C 来考虑，CAP 中的 C 是数据的强一致性，一般来说，涉及到金融相关的系统是必须保证数据的强一致性的，否则会造成经济损失。</p>
+<p>对于一般的系统，由于互联网应用主机众多，并且部署分散，集群规模越来越大，所以节点故障与网络故障是常态。为了保证服务可用性达到 N 个 9 的指标，则需要舍弃 C，保证 AP，通过后续的处理保证数据达到最终一致性即可。</p>
+<h2 id="BASE-理论"><a href="#BASE-理论" class="headerlink" title="BASE 理论"></a>BASE 理论</h2><p>BASE 表示 Basically Available（基本可用）、Soft state（软状态）和 Eventually Consistent（最终一致性）。</p>
+<p>BASE 来源于对大规模互联网系统分布式实践的总结， 是对 CAP 中一致性与可用性权衡的结果。</p>
+<p>BASE 理论核心思想是 <strong>即使无法做到强一致性，但每个应用都可以根据业务特点，采用适当的方式使系统达到最终一致性。</strong></p>
+<ul>
+<li><p>基本可用</p>
+<p>基本可用是指分布式系统在出现不可预知的故障时，允许损失部分可用性。</p>
+<p>例如：</p>
+<ul>
+<li>响应时间损失：当系统部分机房出现故障时，查询接口的响应时间从原来的 0.5s 延长到 1~2s</li>
+<li>功能损失：当电商系统抢购时，由于并发数量激增，为了保护系统的稳定性，部分消费者可能会被引导到一个降级页面</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>软状态</p>
+<p>软状态是指允许系统中的数据存在中间状态，并且该中间状态不会影响系统整体可用性，即允许系统在不同节点的数据副本之间的同步存在延时。</p>
+</li>
+</ul>
+<ul>
+<li><p>最终一致性</p>
+<p>最终一致性是指系统中所有的数据副本，在经过一段时间的同步后，最终能保证所有副本数据一致。在进行同步的这段时间内，系统中的数据就会存在中间状态，系统处于软状态。</p>
+</li>
+</ul>
+<p>关系型数据库大多都会采用同步和异步的方式来实现主备数据复制技术。对于异步方式来说，备库的更新往往会存在延时，这取决于事务日志在主备数据库之间传输的时间长短。如果传输时间过长或者传输过程中出现异常，都会导致这一段时间内主备数据不一致。我们可以采用多次重试或者人工操作来订正备库数据，最终主备库数据能够达成一致。需要注意的是，多次重试一般都是有次数限制的，所以完善的分布式系统一定要对系统异常进行监控，及时采用人工措施去处理，否则系统处于软状态的时间过长，就可能会造成严重的损失。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-05-14T13:11:23.183Z" itemprop="dateUpdated">2020-05-14 21:11:23</time>
+</span><br>
+
+
+        
+    </div>
+    
+    <footer>
+        <a href="http://changleamazing.com">
+            <img src="/img/logo.jpeg" alt="ChangleAmazing">
+            ChangleAmazing
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Distributed-Theory/" rel="tag">Distributed Theory</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/&title=《CAP 定理与 BASE 理论》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/&title=《CAP 定理与 BASE 理论》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《CAP 定理与 BASE 理论》 — 大音希声，大象无形&url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/05/11/BTREE%20%E7%B4%A2%E5%BC%95/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">MySQL BTREE 索引分析</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'false' == 'true',
+            appId: "g8wr7EAnVsuMj5b8roDTXWXp-gzGzoHsz",
+            appKey: "loeTK7v1qdrE1f3ED1tn1hy0",
+            avatar: "mm",
+            placeholder: "Leave Something",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>博客内容遵循 <a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>ChangleAmazing &copy; 2020</span>
+            <span>
+                
+                <a href="http://www.beian.miit.gov.cn/" target="_blank">湘ICP备18002350号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/&title=《CAP 定理与 BASE 理论》 — 大音希声，大象无形&pic=http://changleamazing.com/img/logo.jpeg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/&title=《CAP 定理与 BASE 理论》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《CAP 定理与 BASE 理论》 — 大音希声，大象无形&url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/&via=http://changleamazing.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://changleamazing.com/2020/05/14/CAP%20%E5%AE%9A%E7%90%86%E4%B8%8E%20BASE%20%E7%90%86%E8%AE%BA/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '？？？';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '！！！';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
