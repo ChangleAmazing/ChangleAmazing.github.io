@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://changleamazing.com/"/>
-  <updated>2020-05-14T13:11:23.183Z</updated>
+  <updated>2020-05-16T19:07:17.764Z</updated>
   <id>http://changleamazing.com/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>一致性协议</title>
+    <link href="http://changleamazing.com/2020/05/16/%E4%B8%80%E8%87%B4%E6%80%A7%E5%8D%8F%E8%AE%AE/"/>
+    <id>http://changleamazing.com/2020/05/16/%E4%B8%80%E8%87%B4%E6%80%A7%E5%8D%8F%E8%AE%AE/</id>
+    <published>2020-05-16T09:04:24.000Z</published>
+    <updated>2020-05-16T19:07:17.764Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文会分析经典的 2PC、3PC 以及 Paxos 算法来了解分布式系统的数据一致性协议。</p><a id="more"></a><p>在分布式系统中，通过网络请求其它服务的接口，总共会有三种情况：正确、失败和超时。其中正确和失败我们都能确定被调用服务的执行情况，但是<strong>在接口调用超时的情况下，调用方不能确定被调用方是否成功处理了请求</strong>，这一点造成了分布式系统中的许多问题。</p><p>通过对 CAP 定理的分析，可以知道分布式系统主要是对系统的可用性和数据一致性之间进行权衡，因此产生了一系列的一致性协议。我们来看看一些经典的一致性协议是如何解决上述的服务调用超时问题的。 </p><h2 id="2PC-与-3PC"><a href="#2PC-与-3PC" class="headerlink" title="2PC 与 3PC"></a>2PC 与 3PC</h2><p>在一个分布式系统中，每个节点都只知道自己的执行情况，并不知道其他节点的执行情况，所以我们需要引入协调者（Coordinator）来统一调度所有节点的执行逻辑，这些被调度的分布式节点则被称为参与者（Participant）。</p><p>协调者负责调度参与者的行为，并最终决定这些参与者是否需要提交事务。基于这个思想，产生了二阶段提交（2PC）与三阶段提交（3PC）两种协议。</p><h3 id="2PC"><a href="#2PC" class="headerlink" title="2PC"></a>2PC</h3><p><strong>分布式系统中的一致性协议都是基于两阶段提交进行的改进</strong>。</p><p>2PC 将执行过程分为了两个阶段，投票阶段与提交阶段。</p><h4 id="投票阶段"><a href="#投票阶段" class="headerlink" title="投票阶段"></a>投票阶段</h4><img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-16-190627.jpg" alt="2PC VOTING PHASE" style="zoom:25%;" /><p>如图所示，在投票阶段分为三个步骤：</p><ol><li>协调者会询问所有的参与者是否可以执行提交</li><li>各参与者节点执行事务操作，并记录Undo（回滚）和 Redo（重试）日志</li><li>各参与者向协调者反馈执行操作的结果</li></ol><h4 id="提交阶段"><a href="#提交阶段" class="headerlink" title="提交阶段"></a>提交阶段</h4><p><strong>当所有的参与者都返回了确定的结果（同意或终止）时</strong>，2PC 进入提交阶段。</p><img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-16-190615.jpg" alt="2PC COMMIT PHASE" style="zoom:25%;" /><p>提交阶段分为四个步骤：</p><ol><li>协调者根据投票阶段是否有参与者返回失败来决定发送 Commit 请求还是 Rollback 请求</li><li>参与者接收到协调者发送的请求后，如果是 Commit，会执行该节点的事务提交操作，并释放占用的资源；如果是 Rollback，会根据投票阶段该节点记录的 Undo 日志执行事务回滚操作，并释放占用的资源</li><li>参与在完成相应的事务操作之后，向协调者发送 ACK 消息</li><li>协调者接收到所有参与者反馈的 ACK 消息之后，完成操作</li></ol><h4 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h4><p>2PC 的优点在于原理简单且实现方便。</p><p>但是缺点也很明显，由于 2PC 是同步阻塞协议，如果在投票阶段，当参与者处于事务执行阶段时，协调者发生了永久宕机，此时参与者将永远无法完成事务，因为它们会一直等待 Commit/Rollback 请求。</p><p>另一点是数据不一致问题，如果在提交阶段，当协调者向所有参与者发送 Commit 请求时，如果此时部分参与者出现故障，或者协调者在向部分节点发送 Commit 请求后自身故障，会出现系统中部分参与者提交了事务，而其他参与者仍然没有进行事务提交，导致系统中出现了数据不一致的现象。</p><h3 id="3PC"><a href="#3PC" class="headerlink" title="3PC"></a>3PC</h3><img src="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-05-16-182356.png" alt="3PC" style="zoom:25%;" /><p>3PC 是在 2PC 的基础上改进的，它将 2PC 的投票阶段中的询问与执行事务拆分为两个阶段。形成了由 canCommit、preCommit 和 doCommit 三个阶段组成的协议。</p><p>3PC 主要对 2PC 进行了两处改动，首先是将 2PC 投票阶段拆分成两个阶段之后，降低了阻塞范围。3PC 最大的改动是引入了超时和节点宕机的处理机制。</p><p><strong>节点在超时后会根据阶段来决定是否提交事务</strong>，比如在第三阶段中，某个参与者没有收到协调者的 commit 请求，它会自动提交事务。因为在第二阶段协调者既然能发出 commit 请求，就说明第一阶段中所有节点都认为自己能够执行事务，所以该参与者会认为在绝大概率情况下，其它参与者第二阶段也能正确执行事务，并向协调者发送 ACK 。</p><p><strong>节点在宕机后会根据另一方接下来的操作来决定重启后的操作</strong>。依然用第三阶段举例，假设当所有参与者都向协调者发送了 ACK 之后，协调者将向参与者发送 commit 请求，而此时协调者直接宕机。由于存在超时处理机制，在第三阶段各个参与者一直收不到 commit 请求也会自己提交事务。所以协调者在宕机恢复之后默认所有的参与者已经自动提交事务，因此协调者会完成事务，正确结束。</p><p>对于参与者来说，则是判断下一步协调者会发出的指令，并作出对应的操作。</p><p>这篇来自弗吉尼亚理工大学的名为 <a href="http://courses.cs.vt.edu/~cs5204/fall00/distributedDBMS/sreenu/3pc.html" target="_blank" rel="noopener">Three-Phase Commit Protocol</a> 的文章对 3PC 的各种情形都做了详细的描述，推荐一看。</p><h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><p>3PC 仍然存在数据不一致的问题，由于第三阶段中参与者的超时处理逻辑为自动提交，如果协调者真正向其他参与者发送的请求为 rollback，那么就会导致该自动提交的参与者与其他参与者数据不一致。</p><h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><ul><li><a href="http://courses.cs.vt.edu/~cs5204/fall00/distributedDBMS/sreenu/3pc.html" target="_blank" rel="noopener">Three-Phase Commit Protocol</a></li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本文会分析经典的 2PC、3PC 以及 Paxos 算法来了解分布式系统的数据一致性协议。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="分布式系统" scheme="http://changleamazing.com/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"/>
+    
+    
+      <category term="Distributed Theory" scheme="http://changleamazing.com/tags/Distributed-Theory/"/>
+    
+  </entry>
   
   <entry>
     <title>CAP 定理与 BASE 理论</title>
