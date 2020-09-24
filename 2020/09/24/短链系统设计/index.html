@@ -21,16 +21,16 @@
     
     
     <meta name="keywords" content="System Design">
-    <meta name="description" content="作用短链系统用于为长链接创建较短的别名，这些别名叫做短链接。当用户点击短链接时，他们会被重定向到原始 URL。 短链接在展示、发送博客时可以节省大量空间，另外，较短的 URL 更方便用户输入。 例如我们可以通过 tinyUrl 缩短链接 https:&#x2F;&#x2F;store.steampowered.com&#x2F;app&#x2F;1375870&#x2F;Comrade_Trumps_Reelection&#x2F; 为 https:&#x2F;&#x2F;t">
+    <meta name="description" content="本文会讨论短链接系统设计中的一些关键细节。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="短链接系统设计">
 <meta property="og:url" content="http://changleamazing.com/2020/09/24/%E7%9F%AD%E9%93%BE%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/index.html">
 <meta property="og:site_name" content="大音希声，大象无形">
-<meta property="og:description" content="作用短链系统用于为长链接创建较短的别名，这些别名叫做短链接。当用户点击短链接时，他们会被重定向到原始 URL。 短链接在展示、发送博客时可以节省大量空间，另外，较短的 URL 更方便用户输入。 例如我们可以通过 tinyUrl 缩短链接 https:&#x2F;&#x2F;store.steampowered.com&#x2F;app&#x2F;1375870&#x2F;Comrade_Trumps_Reelection&#x2F; 为 https:&#x2F;&#x2F;t">
+<meta property="og:description" content="本文会讨论短链接系统设计中的一些关键细节。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://changleamazing-1253815386.cos.ap-guangzhou.myqcloud.com/blog/2020-09-11-070048.png">
 <meta property="article:published_time" content="2020-09-24T13:45:20.000Z">
-<meta property="article:modified_time" content="2020-09-24T13:45:45.786Z">
+<meta property="article:modified_time" content="2020-09-24T13:50:05.298Z">
 <meta property="article:author" content="ChangleAmazing">
 <meta property="article:tag" content="System Design">
 <meta name="twitter:card" content="summary">
@@ -184,9 +184,12 @@
 
         </div>
         <div class="post-content" id="post-content" itemprop="postContent">
-            <h2 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h2><p>短链系统用于为长链接创建较短的别名，这些别名叫做短链接。当用户点击短链接时，他们会被重定向到原始 URL。</p>
+            <p>本文会讨论短链接系统设计中的一些关键细节。</p>
+<a id="more"></a>
+
+<h2 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h2><p>短链系统用于为长链接创建较短的别名，这些别名叫做短链接。当用户点击短链接时，他们会被重定向到原始 URL。</p>
 <p>短链接在展示、发送博客时可以节省大量空间，另外，较短的 URL 更方便用户输入。</p>
-<p>例如我们可以通过 <a href="https://tinyurl.com/yx93wn76" target="_blank" rel="noopener">tinyUrl</a> 缩短链接 <a href="https://store.steampowered.com/app/1375870/Comrade_Trumps_Reelection/" target="_blank" rel="noopener">https://store.steampowered.com/app/1375870/Comrade_Trumps_Reelection/</a> 为 <a href="https://tinyurl.com/yx93wn76。" target="_blank" rel="noopener">https://tinyurl.com/yx93wn76。</a></p>
+<p>例如我们可以通过 <a href="https://tinyurl.com/yx93wn76" target="_blank" rel="noopener">tinyUrl</a> 缩短链接 <a href="https://store.steampowered.com/app/1375870/Comrade_Trumps_Reelection/" target="_blank" rel="noopener">https://store.steampowered.com/app/1375870/Comrade_Trumps_Reelection/</a> 为 <a href="https://tinyurl.com/yx93wn76" target="_blank" rel="noopener">https://tinyurl.com/yx93wn76</a> 。</p>
 <h2 id="系统的要求与目标"><a href="#系统的要求与目标" class="headerlink" title="系统的要求与目标"></a>系统的要求与目标</h2><h3 id="功能需求"><a href="#功能需求" class="headerlink" title="功能需求"></a>功能需求</h3><ol>
 <li>对于给定 URL，服务应该生成一个较短并且唯一的别名。</li>
 <li>用户访问短链接时，服务应该将其重定向到原始链接。</li>
@@ -355,7 +358,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2020-09-24T13:45:45.786Z" itemprop="dateUpdated">2020-09-24 21:45:45</time>
+    最后更新时间：<time datetime="2020-09-24T13:50:05.298Z" itemprop="dateUpdated">2020-09-24 21:50:05</time>
 </span><br>
 
 
@@ -395,7 +398,7 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/09/24/%E7%9F%AD%E9%93%BE%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/&title=《短链接系统设计》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/09/24/%E7%9F%AD%E9%93%BE%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/&title=《短链接系统设计》 — 大音希声，大象无形&source=本文会讨论短链接系统设计中的一些关键细节。" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
@@ -538,7 +541,7 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/09/24/%E7%9F%AD%E9%93%BE%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/&title=《短链接系统设计》 — 大音希声，大象无形&source=这深夜里一片寂静，是因为你还没有听见声音" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://changleamazing.com/2020/09/24/%E7%9F%AD%E9%93%BE%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/&title=《短链接系统设计》 — 大音希声，大象无形&source=本文会讨论短链接系统设计中的一些关键细节。" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
